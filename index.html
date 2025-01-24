@@ -13,10 +13,28 @@
       display: block;
       background: #70c5ce;
     }
+    #flyButton {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #ffcc00;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 4px #b38f00;
+    }
+    #flyButton:active {
+      box-shadow: 0 2px #b38f00;
+      transform: translate(-50%, 2px);
+    }
   </style>
 </head>
 <body>
   <canvas id="flappyBird"></canvas>
+  <button id="flyButton">Fly</button>
 
   <script>
     const canvas = document.getElementById("flappyBird");
@@ -45,7 +63,7 @@
     let isGameOver = false;
 
     // Event listener for bird jump
-    document.addEventListener("keydown", () => {
+    document.getElementById("flyButton").addEventListener("click", () => {
       bird.velocity = bird.lift;
     });
 
