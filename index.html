@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Super Mario Portrait Mode</title>
+  <title>Super Mario Portrait Mode - Continuous</title>
   <style>
     body {
       margin: 0;
@@ -39,20 +39,12 @@
       transform: translate(-50%, -50%);
       display: none;
     }
-    #walkLeftButton, #walkRightButton, #jumpButton {
-      bottom: 10%;
-      transform: translateX(-50%);
-      width: 80px;
-      font-size: 12px;
-    }
-    #walkLeftButton {
-      left: 30%;
-    }
-    #walkRightButton {
-      left: 50%;
-    }
     #jumpButton {
-      left: 70%;
+      bottom: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -60,8 +52,6 @@
   <canvas id="marioGame"></canvas>
   <button id="startButton">Start Game</button>
   <button id="retryButton">Retry</button>
-  <button id="walkLeftButton">Left</button>
-  <button id="walkRightButton">Right</button>
   <button id="jumpButton">Jump</button>
 
   <script>
@@ -79,9 +69,10 @@
     let moveSpeed = 5;
     let isJumping = false;
     let gameOver = false;
-    let platform;
+    let platforms = [];
+    let scrollOffset = 0;
 
-    // Initialize Mario and Platform
+    // Initialize Mario and Platforms
     function init() {
       mario = {
         x: 50,
@@ -89,17 +80,16 @@
         width: 40,
         height: 40,
         velocityY: 0,
-        speedX: 0,
       };
 
-      // Platform setup
-      platform = {
-        x: 100,
-        y: 400,
-        width: 200,
-        height: 20,
-      };
+      // Create initial platforms
+      platforms = [
+        { x: 100, y: 400, width: 200, height: 20 },
+        { x: 400, y: 300, width: 150, height: 20 },
+        { x: 700, y: 500, width: 250, height: 20 },
+      ];
 
+      scrollOffset = 0;
       gameOver = false;
       document.getElementById("startButton").style.display = "none";
       document.getElementById("retryButton").style.display = "none";
@@ -115,24 +105,18 @@
     // Draw ground
     function drawGround() {
       ctx.fillStyle = "#228B22";
-      ctx.fillRect(0, ground, canvas.width, 50);
+      ctx.fillRect(-scrollOffset, ground, canvas.width + scrollOffset, 50);
     }
 
-    // Draw platform
-    function drawPlatform() {
+    // Draw platforms
+    function drawPlatforms() {
       ctx.fillStyle = "#8B4513";
-      ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+      platforms.forEach(platform => {
+        ctx.fillRect(platform.x - scrollOffset, platform.y, platform.width, platform.height);
+      });
     }
 
-    // Handle user input for walking and jumping
-    document.getElementById("walkLeftButton").addEventListener("click", () => {
-      if (mario.x > 0) mario.x -= moveSpeed;
-    });
-
-    document.getElementById("walkRightButton").addEventListener("click", () => {
-      if (mario.x + mario.width < canvas.width) mario.x += moveSpeed;
-    });
-
+    // Handle jump button
     document.getElementById("jumpButton").addEventListener("click", () => {
       if (!isJumping) {
         mario.velocityY = jumpStrength;
@@ -159,28 +143,53 @@
         isJumping = false;
       }
 
-      // Check if Mario is colliding with the platform
-      if (
-        mario.x + mario.width > platform.x &&
-        mario.x < platform.x + platform.width &&
-        mario.y + mario.height <= platform.y &&
-        mario.velocityY >= 0
-      ) {
-        mario.velocityY = 0;
-        mario.y = platform.y - mario.height;
-        isJumping = false;
+      // Update scrolling
+      scrollOffset += moveSpeed;
+
+      // Check if Mario is colliding with platforms
+      platforms.forEach(platform => {
+        if (
+          mario.x + mario.width > platform.x - scrollOffset &&
+          mario.x < platform.x - scrollOffset + platform.width &&
+          mario.y + mario.height <= platform.y &&
+          mario.velocityY >= 0
+        ) {
+          mario.velocityY = 0;
+          mario.y = platform.y - mario.height;
+          isJumping = false;
+        }
+      });
+
+      // Generate new platforms as old ones scroll off-screen
+      if (platforms[0].x - scrollOffset + platforms[0].width < 0) {
+        platforms.shift();
+        const newPlatform = {
+          x: platforms[platforms.length - 1].x + 300 + Math.random() * 200,
+          y: 300 + Math.random() * 200,
+          width: 150 + Math.random() * 100,
+          height: 20,
+        };
+        platforms.push(newPlatform);
       }
 
       // Draw everything
       drawGround();
-      drawPlatform();
+      drawPlatforms();
       drawMario();
 
-      // Keep Mario within bounds
-      if (mario.x < 0) mario.x = 0;
-      if (mario.x + mario.width > canvas.width) mario.x = canvas.width - mario.width;
+      // End game if Mario goes out of bounds
+      if (mario.y > canvas.height) {
+        gameOverFunction();
+      }
 
+      // Request next frame
       requestAnimationFrame(update);
+    }
+
+    // Game over function
+    function gameOverFunction() {
+      gameOver = true;
+      document.getElementById("retryButton").style.display = "block";
     }
 
     // Start button click handler
@@ -193,7 +202,7 @@
       init();
     });
 
-    // Show start button initially
+    // Initialize the game with the start button visible
     document.getElementById("startButton").style.display = "block";
   </script>
 </body>
