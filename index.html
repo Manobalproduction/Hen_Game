@@ -49,8 +49,8 @@
       y: 150,
       width: 30,
       height: 30,
-      gravity: 2,
-      lift: -30,
+      gravity: 1,
+      lift: -15,
       velocity: 0,
     };
 
@@ -92,13 +92,13 @@
         pipes.push({ x: canvas.width, y: pipeY });
       }
       pipeTimer++;
-      if (pipeTimer > 100) {
+      if (pipeTimer > 200) { // Slower pipe spawn rate
         pipeTimer = 0;
       }
 
       for (let i = 0; i < pipes.length; i++) {
         const pipe = pipes[i];
-        pipe.x -= 2;
+        pipe.x -= 1; // Slower pipe movement
 
         // Draw pipes
         ctx.fillStyle = "green";
