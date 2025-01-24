@@ -1,92 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Controlled Box Game</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flappy Bird</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background: #70c5ce;
+    }
+    #flyButton {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #ffcc00;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 4px #b38f00;
+    }
+    #flyButton:active {
+      box-shadow: 0 2px #b38f00;
+      transform: translate(-50%, 2px);
+    }
 
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-        }
-
-        #game-container {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            background-color: #ddd;
-        }
-
-        #box {
-            width: 50px;
-            height: 50px;
-            background-color: red;
-            position: absolute;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-    </style>
+    #retryButton {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #ff6666;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 4px #b30000;
+    }
+    #retryButton:active {
+      box-shadow: 0 2px #b30000;
+      transform: translate(-50%, calc(-50% + 2px));
+    }
+  </style>
 </head>
 <body>
-    <div id="game-container">
-        <div id="box"></div>
-    </div>
+  <canvas id="flappyBird"></canvas>
+  <button id="flyButton">Fly</button>
+  <button id="retryButton">Retry</button>
 
-    <script>
-        // Set up speech recognition
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'en-US';
-        recognition.continuous = false;
-        recognition.interimResults = false;
+  <script>
+    const canvas = document.getElementById("flappyBird");
+    const ctx = canvas.getContext("2d");
 
-        // The box to move
-        const box = document.getElementById('box');
+    canvas.width = 400;
+    canvas.height = 600;
 
-        // Game variables
-        let boxPosition = 20; // initial position of the box
+    // Game variables
+    let bird;
+    let pipes;
+    let pipeTimer;
+    let score;
+    let isGameOver;
+    let gameStarted = false;
 
-        // Start voice recognition
-        recognition.start();
+    const gravity = 0.5; // Reduced gravity
+    const lift = -7.5; // Reduced lift
+    const pipeSpeed = 0.5; // Reduced pipe movement speed
+    const pipeSpawnRate = 400; // Slower pipe spawn rate
 
-        // Listen for speech input
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript.toLowerCase();
-            console.log('Heard:', transcript);
+    function init() {
+      bird = {
+        x: 50,
+        y: 150,
+        width: 30,
+        height: 30,
+        velocity: 0,
+      };
 
-            // Move the box if the command is "move"
-            if (transcript.includes('move')) {
-                moveBox();
-            }
-        };
+      pipes = [];
+      pipeTimer = 0;
+      score = 0;
+      isGameOver = false;
+      gameStarted = false;
 
-        // Function to move the box forward
-        function moveBox() {
-            boxPosition += 20; // Increase position by 20px
-            box.style.left = `${boxPosition}px`; // Update the box's position
-            if (boxPosition > window.innerWidth) {
-                boxPosition = 20; // Reset position if it moves off-screen
-            }
+      document.getElementById("retryButton").style.display = "none";
+      document.getElementById("flyButton").disabled = false;
+      drawInitialScreen();
+    }
+
+    function drawInitialScreen() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "yellow";
+      ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
+
+      ctx.fillStyle = "#fff";
+      ctx.font = "20px Arial";
+      ctx.fillText("Click Fly to Start", canvas.width / 2 - 80, canvas.height / 2);
+    }
+
+    document.getElementById("flyButton").addEventListener("click", () => {
+      if (!gameStarted) {
+        gameStarted = true;
+        update();
+      }
+      bird.velocity = lift;
+    });
+
+    document.getElementById("retryButton").addEventListener("click", init);
+
+    // Game loop
+    function update() {
+      if (isGameOver) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw the bird
+      ctx.fillStyle = "yellow";
+      ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
+
+      // Update bird position
+      bird.velocity += gravity;
+      bird.y += bird.velocity;
+
+      // Prevent bird from falling off the canvas
+      if (bird.y + bird.height > canvas.height || bird.y < 0) {
+        gameOver();
+      }
+
+      // Handle pipes
+      if (pipeTimer === 0) {
+        const pipeY = Math.random() * (canvas.height - 150 - 100) + 50;
+        pipes.push({ x: canvas.width, y: pipeY });
+      }
+      pipeTimer++;
+      if (pipeTimer > pipeSpawnRate) {
+        pipeTimer = 0;
+      }
+
+      for (let i = 0; i < pipes.length; i++) {
+        const pipe = pipes[i];
+        pipe.x -= pipeSpeed;
+
+        // Draw pipes
+        ctx.fillStyle = "green";
+        ctx.fillRect(pipe.x, 0, 50, pipe.y);
+        ctx.fillRect(pipe.x, pipe.y + 150, 50, canvas.height - pipe.y - 150);
+
+        // Check for collision
+        if (
+          bird.x < pipe.x + 50 &&
+          bird.x + bird.width > pipe.x &&
+          (bird.y < pipe.y || bird.y + bird.height > pipe.y + 150)
+        ) {
+          gameOver();
         }
 
-        // Handle errors
-        recognition.onerror = (event) => {
-            console.error('Error occurred in speech recognition: ', event.error);
-        };
+        // Remove pipes that are out of bounds
+        if (pipe.x + 50 < 0) {
+          pipes.splice(i, 1);
+          score++;
+        }
+      }
 
-        // Restart recognition when it ends
-        recognition.onend = () => {
-            recognition.start();
-        };
-    </script>
+      // Draw score
+      ctx.fillStyle = "#fff";
+      ctx.font = "20px Arial";
+      ctx.fillText(`Score: ${score}`, 10, 30);
+
+      requestAnimationFrame(update);
+    }
+
+    function gameOver() {
+      isGameOver = true;
+      ctx.fillStyle = "red";
+      ctx.font = "40px Arial";
+      ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2);
+      document.getElementById("retryButton").style.display = "block";
+    }
+
+    init();
+  </script>
 </body>
 </html>
