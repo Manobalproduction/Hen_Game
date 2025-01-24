@@ -109,7 +109,11 @@
 
     // Hen sprite
     const henImage = new Image();
-    henImage.src = 'https://i.imgur.com/NHObTqH.png'; // Replace with your hen image
+    henImage.src = 'https://i.imgur.com/sjaXlz7.png'; // Hen character image
+
+    // Background platform sprite
+    const platformImage = new Image();
+    platformImage.src = 'https://i.imgur.com/2wR8A3V.png'; // Platform image
 
     // Sound
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
@@ -163,6 +167,9 @@
       gameOverScreen.style.display = 'none';
       isGameOver = false;
       generatePlatforms();
+      henX = 50;
+      henY = canvas.height - HEN_HEIGHT;
+      henVelocityY = 0;
       gameLoop();
     }
 
@@ -182,9 +189,8 @@
 
     // Draw platforms
     function drawPlatforms() {
-      ctx.fillStyle = 'green';
       platforms.forEach((platform) => {
-        ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+        ctx.drawImage(platformImage, platform.x, platform.y, platform.width, platform.height);
       });
     }
 
