@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flappy Bird</title>
+  <title>Flappy Bird with Voice Control</title>
   <style>
     body {
       margin: 0;
@@ -13,24 +13,6 @@
       display: block;
       background: #70c5ce;
     }
-    #flyButton {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #ffcc00;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      box-shadow: 0 4px #b38f00;
-    }
-    #flyButton:active {
-      box-shadow: 0 2px #b38f00;
-      transform: translate(-50%, 2px);
-    }
-
     #retryButton {
       display: none;
       position: absolute;
@@ -53,7 +35,6 @@
 </head>
 <body>
   <canvas id="flappyBird"></canvas>
-  <button id="flyButton">Fly</button>
   <button id="retryButton">Retry</button>
 
   <script>
@@ -70,6 +51,7 @@
     let score;
     let isGameOver;
     let gameStarted = false;
+    let voiceIntensity = 0;
 
     const gravity = 0.5; // Reduced gravity
     const lift = -7.5; // Reduced lift
@@ -92,7 +74,6 @@
       gameStarted = false;
 
       document.getElementById("retryButton").style.display = "none";
-      document.getElementById("flyButton").disabled = false;
       drawInitialScreen();
     }
 
@@ -103,18 +84,40 @@
 
       ctx.fillStyle = "#fff";
       ctx.font = "20px Arial";
-      ctx.fillText("Click Fly to Start", canvas.width / 2 - 80, canvas.height / 2);
+      ctx.fillText("Speak to Start", canvas.width / 2 - 80, canvas.height / 2);
     }
 
-    document.getElementById("flyButton").addEventListener("click", () => {
+    document.getElementById("retryButton").addEventListener("click", init);
+
+    // Voice control setup
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => {
+      console.log("Voice recognition started. Speak to control the bird.");
+    };
+
+    recognition.onspeechend = () => {
+      console.log("Speech recognition ended.");
+    };
+
+    recognition.onresult = (event) => {
+      let loudness = 0;
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        loudness = Math.max(loudness, event.results[i][0].confidence);
+      }
+      voiceIntensity = loudness * 10; // Scale voice intensity for effect
+    };
+
+    // Start the recognition when the game starts
+    document.body.addEventListener("click", () => {
       if (!gameStarted) {
         gameStarted = true;
+        recognition.start();
         update();
       }
-      bird.velocity = lift;
     });
-
-    document.getElementById("retryButton").addEventListener("click", init);
 
     // Game loop
     function update() {
@@ -126,8 +129,9 @@
       ctx.fillStyle = "yellow";
       ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
 
-      // Update bird position
+      // Adjust bird position based on voice intensity
       bird.velocity += gravity;
+      bird.velocity = Math.max(bird.velocity, lift + voiceIntensity); // Increase lift based on voice intensity
       bird.y += bird.velocity;
 
       // Prevent bird from falling off the canvas
