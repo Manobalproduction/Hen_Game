@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Super Mario Style Game with Platform</title>
+  <title>Super Mario Style Game with Platform and Buttons</title>
   <style>
     body {
       margin: 0;
@@ -13,10 +13,55 @@
       display: block;
       background-color: #87CEEB;
     }
+    button {
+      position: absolute;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #ffcc00;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 4px #b38f00;
+    }
+    button:active {
+      box-shadow: 0 2px #b38f00;
+      transform: translateY(2px);
+    }
+    #startButton {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    #retryButton {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, 50%);
+      display: none;
+    }
+    #walkLeftButton, #walkRightButton, #jumpButton {
+      top: 80%;
+      transform: translateX(-50%);
+      width: 100px;
+      font-size: 14px;
+    }
+    #walkLeftButton {
+      left: 25%;
+    }
+    #walkRightButton {
+      left: 50%;
+    }
+    #jumpButton {
+      left: 75%;
+    }
   </style>
 </head>
 <body>
   <canvas id="marioGame"></canvas>
+  <button id="startButton">Start Game</button>
+  <button id="retryButton">Retry</button>
+  <button id="walkLeftButton">Walk Left</button>
+  <button id="walkRightButton">Walk Right</button>
+  <button id="jumpButton">Jump</button>
 
   <script>
     const canvas = document.getElementById("marioGame");
@@ -55,6 +100,8 @@
       };
 
       gameOver = false;
+      document.getElementById("startButton").style.display = "none";
+      document.getElementById("retryButton").style.display = "none";
       update();
     }
 
@@ -76,24 +123,29 @@
       ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
     }
 
-    // Handle user input
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowRight") {
-        mario.speedX = moveSpeed;
-      }
-      if (e.key === "ArrowLeft") {
-        mario.speedX = -moveSpeed;
-      }
-      if (e.key === " " && !isJumping) {
+    // Handle user input for walking and jumping
+    document.getElementById("walkLeftButton").addEventListener("click", () => {
+      mario.speedX = -moveSpeed;
+    });
+
+    document.getElementById("walkRightButton").addEventListener("click", () => {
+      mario.speedX = moveSpeed;
+    });
+
+    document.getElementById("jumpButton").addEventListener("click", () => {
+      if (!isJumping) {
         mario.velocityY = jumpStrength;
         isJumping = true;
       }
     });
 
-    document.addEventListener("keyup", (e) => {
-      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-        mario.speedX = 0;
-      }
+    // Stop walking when button is released
+    document.getElementById("walkLeftButton").addEventListener("mouseup", () => {
+      mario.speedX = 0;
+    });
+
+    document.getElementById("walkRightButton").addEventListener("mouseup", () => {
+      mario.speedX = 0;
     });
 
     // Game update loop
@@ -141,8 +193,25 @@
       requestAnimationFrame(update);
     }
 
-    // Initialize the game
-    init();
+    // Game over function
+    function gameOverFunction() {
+      gameOver = true;
+      document.getElementById("retryButton").style.display = "block";
+    }
+
+    // Start button click handler
+    document.getElementById("startButton").addEventListener("click", () => {
+      init();
+    });
+
+    // Retry button click handler
+    document.getElementById("retryButton").addEventListener("click", () => {
+      init();
+    });
+
+    // Initialize the game with the start button visible
+    document.getElementById("startButton").style.display = "block";
+
   </script>
 </body>
 </html>
