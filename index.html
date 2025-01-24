@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Super Mario - Cylinders & Thorns</title>
+  <title>Platform Game with Game Over</title>
   <style>
     body {
       margin: 0;
@@ -49,13 +49,13 @@
   </style>
 </head>
 <body>
-  <canvas id="marioGame"></canvas>
+  <canvas id="gameCanvas"></canvas>
   <button id="startButton">Start Game</button>
   <button id="retryButton">Retry</button>
   <button id="jumpButton">Jump</button>
 
   <script>
-    const canvas = document.getElementById("marioGame");
+    const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
     canvas.width = 400;
@@ -63,29 +63,29 @@
 
     // Game variables
     let mario;
-    let gravity = 0.8;
+    let gravity = 0.6;
     let jumpStrength = -12;
-    let moveSpeed = 1.5; // Slower movement
+    let moveSpeed = 1.5; // 70% slower
     let isJumping = false;
     let gameOver = false;
-    let cylinders = [];
+    let platforms = [];
     let scrollOffset = 0;
 
-    // Initialize Mario and Cylinders
+    // Initialize Mario and Platforms
     function init() {
       mario = {
         x: 50,
-        y: canvas.height - 100,
+        y: canvas.height - 120,
         width: 40,
         height: 40,
         velocityY: 0,
       };
 
-      // Create initial cylinders
-      cylinders = [
-        { x: 0, height: 150, width: 100 },
-        { x: 300, height: 200, width: 80 },
-        { x: 600, height: 100, width: 120 },
+      // Create initial platforms
+      platforms = [
+        { x: 0, y: canvas.height - 150, width: 150, height: 20 },
+        { x: 200, y: canvas.height - 300, width: 100, height: 20 },
+        { x: 400, y: canvas.height - 200, width: 120, height: 20 },
       ];
 
       scrollOffset = 0;
@@ -101,28 +101,11 @@
       ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
     }
 
-    // Draw ground with thorns
-    function drawGround() {
-      ctx.fillStyle = "#8B0000";
-      ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
-
-      // Draw thorns
-      ctx.fillStyle = "black";
-      for (let i = 0; i < canvas.width; i += 20) {
-        ctx.beginPath();
-        ctx.moveTo(i, canvas.height - 20);
-        ctx.lineTo(i + 10, canvas.height - 40);
-        ctx.lineTo(i + 20, canvas.height - 20);
-        ctx.closePath();
-        ctx.fill();
-      }
-    }
-
-    // Draw cylinders
-    function drawCylinders() {
+    // Draw platforms
+    function drawPlatforms() {
       ctx.fillStyle = "#8B4513";
-      cylinders.forEach(cylinder => {
-        ctx.fillRect(cylinder.x - scrollOffset, canvas.height - 20 - cylinder.height, cylinder.width, cylinder.height);
+      platforms.forEach(platform => {
+        ctx.fillRect(platform.x - scrollOffset, platform.y, platform.width, platform.height);
       });
     }
 
@@ -150,42 +133,42 @@
       // Update scrolling
       scrollOffset += moveSpeed;
 
-      // Check if Mario is colliding with cylinders
-      let isOnCylinder = false;
-      cylinders.forEach(cylinder => {
+      // Check if Mario is colliding with platforms
+      let isOnPlatform = false;
+      platforms.forEach(platform => {
         if (
-          mario.x + mario.width > cylinder.x - scrollOffset &&
-          mario.x < cylinder.x - scrollOffset + cylinder.width &&
-          mario.y + mario.height >= canvas.height - 20 - cylinder.height &&
-          mario.y + mario.height <= canvas.height - 20 &&
+          mario.x + mario.width > platform.x - scrollOffset &&
+          mario.x < platform.x - scrollOffset + platform.width &&
+          mario.y + mario.height >= platform.y &&
+          mario.y + mario.height <= platform.y + 10 && // Allow small tolerance
           mario.velocityY >= 0
         ) {
           mario.velocityY = 0;
-          mario.y = canvas.height - 20 - cylinder.height - mario.height;
+          mario.y = platform.y - mario.height;
           isJumping = false;
-          isOnCylinder = true;
+          isOnPlatform = true;
         }
       });
 
-      // End game if Mario falls on thorns
-      if (!isOnCylinder && mario.y + mario.height >= canvas.height - 20) {
+      // End game if Mario falls below platforms
+      if (!isOnPlatform && mario.y + mario.height >= canvas.height) {
         gameOverFunction();
       }
 
-      // Generate new cylinders as old ones scroll off-screen
-      if (cylinders[0].x - scrollOffset + cylinders[0].width < 0) {
-        cylinders.shift();
-        const newCylinder = {
-          x: cylinders[cylinders.length - 1].x + 200 + Math.random() * 200,
-          height: 100 + Math.random() * 150,
-          width: 80 + Math.random() * 50,
+      // Generate new platforms as old ones scroll off-screen
+      if (platforms[0].x - scrollOffset + platforms[0].width < 0) {
+        platforms.shift();
+        const newPlatform = {
+          x: platforms[platforms.length - 1].x + 200 + Math.random() * 200,
+          y: canvas.height - 100 - Math.random() * 200,
+          width: 100 + Math.random() * 50,
+          height: 20,
         };
-        cylinders.push(newCylinder);
+        platforms.push(newPlatform);
       }
 
       // Draw everything
-      drawGround();
-      drawCylinders();
+      drawPlatforms();
       drawMario();
 
       // Request next frame
