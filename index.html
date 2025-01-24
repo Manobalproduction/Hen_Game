@@ -9,27 +9,26 @@
       margin: 0;
       overflow: hidden;
       display: flex;
-      flex-direction: column;
       height: 100vh;
-      background: transparent;
     }
     #camera {
-      flex: 1;
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
-      background: black;
+      height: 100%;
       object-fit: cover;
+      z-index: 1;
     }
-    #gameContainer {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
+    #marioGame {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
       background: transparent;
-    }
-    canvas {
-      display: block;
-      background: transparent;
+      pointer-events: none; /* Prevent interference with camera interactions */
     }
   </style>
 </head>
@@ -38,23 +37,21 @@
   <video id="camera" autoplay muted></video>
   
   <!-- Game area -->
-  <div id="gameContainer">
-    <canvas id="marioGame"></canvas>
-  </div>
+  <canvas id="marioGame"></canvas>
 
   <script>
     const canvas = document.getElementById("marioGame");
     const ctx = canvas.getContext("2d");
 
-    // Set canvas dimensions to match the bottom half
+    // Set canvas dimensions to match the screen
     canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight / 2;
+    canvas.height = window.innerHeight;
 
     // Variables for the game
     let mario;
-    let ground = canvas.height - 50;
+    let ground = canvas.height - 100; // Adjusted ground height
     let gravity = 0.8;
-    let jumpStrength = -10; // Reduced jump distance
+    let jumpStrength = -10;
     let moveSpeed = 5;
     let isJumping = false;
 
