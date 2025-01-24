@@ -3,28 +3,231 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR Lungs Viewer</title>
-  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <title>Hen Sound-Based Game</title>
   <style>
     body {
       margin: 0;
-    }
-    model-viewer {
-      width: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
       height: 100vh;
+      font-family: Arial, sans-serif;
+    }
+    #webcam {
+      flex: 1;
+      background: black;
+    }
+    #gameCanvas {
+      flex: 1;
+      background: lightblue;
+    }
+    canvas {
+      display: block;
+    }
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 20px;
+      margin-top: 20px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <model-viewer 
-    src="https://cdn.glitch.me/16112d14-3ddb-40f3-88b5-ffe7f74d4267/lungs.glb?v=1736323346405" 
-    ios-src="https://cdn.glitch.me/16112d14-3ddb-40f3-88b5-ffe7f74d4267/lungs.usdz?v=1736323372348"
-    ar 
-    ar-modes="webxr scene-viewer quick-look" 
-    camera-controls 
-    autoplay 
-    animation-name="default" 
-    exposure="1">
-  </model-viewer>
+  <!-- Webcam feed -->
+  <video id="webcam" autoplay muted></video>
+
+  <!-- Game canvas -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Guide screen -->
+  <div id="guideScreen" class="screen">
+    <h1>Welcome to the Hen Game!</h1>
+    <p>
+      🐔 Make short "Bek" sounds to make the hen walk.<br>
+      🐔 Make louder or longer "Bek" sounds to make the hen jump.<br>
+      🎮 Avoid falling and land safely on platforms!
+    </p>
+    <button onclick="showStartScreen()">Next</button>
+  </div>
+
+  <!-- Start screen -->
+  <div id="startScreen" class="screen" style="display: none;">
+    <h1>Hen Sound-Based Game</h1>
+    <p>Are you ready to guide the hen to victory?</p>
+    <button onclick="startGame()">Start</button>
+  </div>
+
+  <!-- Game Over screen -->
+  <div id="gameOverScreen" class="screen" style="display: none;">
+    <h1>Game Over</h1>
+    <p>Your hen fell! Try again?</p>
+    <button onclick="resetGame()">Try Again</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const webcam = document.getElementById('webcam');
+    const guideScreen = document.getElementById('guideScreen');
+    const startScreen = document.getElementById('startScreen');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight / 2;
+
+    const GRAVITY = 0.5;
+    const HEN_WIDTH = 50;
+    const HEN_HEIGHT = 50;
+
+    let henX = 50;
+    let henY = canvas.height - HEN_HEIGHT;
+    let henVelocityY = 0;
+    let henWalking = false;
+    let platforms = [];
+    let isGameOver = false;
+    let soundThresholdWalk = 10;
+    let soundThresholdJump = 20;
+
+    // Webcam
+    navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+      webcam.srcObject = stream;
+    });
+
+    // Hen sprite
+    const henImage = new Image();
+    henImage.src = 'https://i.imgur.com/NHObTqH.png'; // Replace with your hen image
+
+    // Sound
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      const audioContext = new AudioContext();
+      const analyser = audioContext.createAnalyser();
+      const microphone = audioContext.createMediaStreamSource(stream);
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      analyser.fftSize = 256;
+      microphone.connect(analyser);
+
+      function analyzeAudio() {
+        if (isGameOver) return;
+        analyser.getByteFrequencyData(dataArray);
+        const volume = dataArray.reduce((sum, val) => sum + val, 0) / dataArray.length;
+
+        if (volume > soundThresholdJump && henY >= canvas.height - HEN_HEIGHT) {
+          henVelocityY = -12 - (volume / 20); // Jump
+        } else if (volume > soundThresholdWalk && volume <= soundThresholdJump) {
+          henWalking = true; // Walk
+        } else {
+          henWalking = false;
+        }
+
+        requestAnimationFrame(analyzeAudio);
+      }
+      analyzeAudio();
+    });
+
+    // Generate platforms
+    function generatePlatforms() {
+      platforms = [];
+      for (let i = 0; i < 5; i++) {
+        const width = 100;
+        const height = 10;
+        const x = Math.random() * (canvas.width - width);
+        const y = canvas.height - i * 120;
+        platforms.push({ x, y, width, height });
+      }
+    }
+
+    // Show start screen
+    function showStartScreen() {
+      guideScreen.style.display = 'none';
+      startScreen.style.display = 'flex';
+    }
+
+    // Start game
+    function startGame() {
+      startScreen.style.display = 'none';
+      gameOverScreen.style.display = 'none';
+      isGameOver = false;
+      generatePlatforms();
+      gameLoop();
+    }
+
+    // Reset game
+    function resetGame() {
+      henX = 50;
+      henY = canvas.height - HEN_HEIGHT;
+      henVelocityY = 0;
+      startGame();
+    }
+
+    // Draw hen
+    function drawHen() {
+      if (henWalking) henX += 2; // Move forward
+      ctx.drawImage(henImage, henX, henY, HEN_WIDTH, HEN_HEIGHT);
+    }
+
+    // Draw platforms
+    function drawPlatforms() {
+      ctx.fillStyle = 'green';
+      platforms.forEach((platform) => {
+        ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+      });
+    }
+
+    // Update game
+    function updateGame() {
+      henVelocityY += GRAVITY;
+      henY += henVelocityY;
+
+      if (henY > canvas.height) {
+        isGameOver = true;
+        gameOverScreen.style.display = 'flex';
+      }
+
+      if (henY >= canvas.height - HEN_HEIGHT) {
+        henY = canvas.height - HEN_HEIGHT;
+        henVelocityY = 0;
+      }
+
+      platforms.forEach((platform) => {
+        if (
+          henX < platform.x + platform.width &&
+          henX + HEN_WIDTH > platform.x &&
+          henY + HEN_HEIGHT >= platform.y &&
+          henY + HEN_HEIGHT <= platform.y + platform.height &&
+          henVelocityY >= 0
+        ) {
+          henY = platform.y - HEN_HEIGHT;
+          henVelocityY = 0;
+        }
+      });
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawPlatforms();
+      drawHen();
+    }
+
+    // Game loop
+    function gameLoop() {
+      if (!isGameOver) {
+        updateGame();
+        requestAnimationFrame(gameLoop);
+      }
+    }
+  </script>
 </body>
 </html>
