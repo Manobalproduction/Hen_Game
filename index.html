@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Controlled Game</title>
+    <title>Voice Controlled Box Game</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -16,113 +19,74 @@
             background-color: #f0f0f0;
         }
 
-        .game-container {
+        #game-container {
+            width: 100%;
+            height: 100%;
             position: relative;
+            background-color: #ddd;
         }
 
-        canvas {
-            border: 1px solid #000;
-        }
-
-        .character {
-            position: absolute;
+        #box {
             width: 50px;
             height: 50px;
-            background-color: #3498db;
-            bottom: 0;
+            background-color: red;
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
         }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <canvas id="gameCanvas" width="800" height="400"></canvas>
-        <button id="startButton">Start Game</button>
+    <div id="game-container">
+        <div id="box"></div>
     </div>
 
     <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-        const startButton = document.getElementById("startButton");
+        // Set up speech recognition
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.continuous = false;
+        recognition.interimResults = false;
 
-        let character = { x: 100, y: 350, width: 50, height: 50, speed: 0, jumping: false };
-        let gameStarted = false;
-        let lastBekTime = 0;
+        // The box to move
+        const box = document.getElementById('box');
 
-        startButton.addEventListener("click", startGame);
+        // Game variables
+        let boxPosition = 20; // initial position of the box
 
-        function startGame() {
-            gameStarted = true;
-            startButton.style.display = "none";
-            startVoiceRecognition();
-            requestAnimationFrame(gameLoop);
+        // Start voice recognition
+        recognition.start();
+
+        // Listen for speech input
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript.toLowerCase();
+            console.log('Heard:', transcript);
+
+            // Move the box if the command is "move"
+            if (transcript.includes('move')) {
+                moveBox();
+            }
+        };
+
+        // Function to move the box forward
+        function moveBox() {
+            boxPosition += 20; // Increase position by 20px
+            box.style.left = `${boxPosition}px`; // Update the box's position
+            if (boxPosition > window.innerWidth) {
+                boxPosition = 20; // Reset position if it moves off-screen
+            }
         }
 
-        function startVoiceRecognition() {
-            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = "en-US";
-            recognition.interimResults = true;
+        // Handle errors
+        recognition.onerror = (event) => {
+            console.error('Error occurred in speech recognition: ', event.error);
+        };
 
+        // Restart recognition when it ends
+        recognition.onend = () => {
             recognition.start();
-
-            recognition.onresult = function(event) {
-                let transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
-                if (transcript.includes("bek")) {
-                    const timeNow = new Date().getTime();
-                    const timeDiff = timeNow - lastBekTime;
-                    lastBekTime = timeNow;
-
-                    // Adjust speed based on how quickly "bek" is spoken
-                    if (timeDiff < 1000) {
-                        // Fast bek: Make the character jump
-                        if (!character.jumping) {
-                            character.y -= 50; // Jump up
-                            character.jumping = true;
-                            setTimeout(() => character.jumping = false, 500);
-                        }
-                    } else {
-                        // Slow bek: Make the character walk
-                        character.speed = 2;
-                    }
-                }
-            };
-
-            recognition.onspeechend = function() {
-                recognition.stop();
-            };
-
-            recognition.onerror = function(event) {
-                console.error(event.error);
-            };
-        }
-
-        function gameLoop() {
-            if (!gameStarted) return;
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            updateCharacter();
-            drawCharacter();
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        function updateCharacter() {
-            // Move the character horizontally based on the speed
-            character.x += character.speed;
-
-            if (character.x > canvas.width) {
-                character.x = -character.width;
-            }
-
-            // Gravity (to bring the character back down after jumping)
-            if (character.y < 350) {
-                character.y += 2; // Falling down
-            }
-        }
-
-        function drawCharacter() {
-            ctx.fillStyle = "#3498db";
-            ctx.fillRect(character.x, character.y, character.width, character.height);
-        }
+        };
     </script>
 </body>
 </html>
