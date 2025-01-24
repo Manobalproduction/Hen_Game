@@ -72,7 +72,7 @@
     let gameStarted = false;
 
     const gravity = 0.5; // Reduced gravity
-    const lift = -3.75; // Reduced lift by 50%
+    const lift = -7.5; // Reduced lift
     const pipeSpeed = 0.5; // Reduced pipe movement speed
     const pipeSpawnRate = 400; // Slower pipe spawn rate
 
@@ -173,7 +173,7 @@
       // Draw score
       ctx.fillStyle = "#fff";
       ctx.font = "20px Arial";
-      ctx.fillText(`Score: ${score}`, 10, 30);
+      ctx.fillText(Score: ${score}, 10, 30);
 
       requestAnimationFrame(update);
     }
