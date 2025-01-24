@@ -125,21 +125,24 @@
 
     // Handle user input for walking and jumping
     document.getElementById("walkLeftButton").addEventListener("click", () => {
-      mario.speedX = -moveSpeed;
+      // Move left by one small step
+      if (mario.x > 0) mario.x -= moveSpeed;
     });
 
     document.getElementById("walkRightButton").addEventListener("click", () => {
-      mario.speedX = moveSpeed;
+      // Move right by one small step
+      if (mario.x + mario.width < canvas.width) mario.x += moveSpeed;
     });
 
     document.getElementById("jumpButton").addEventListener("click", () => {
       if (!isJumping) {
         mario.velocityY = jumpStrength;
+        mario.speedX += 5; // Make the jump move a little forward
         isJumping = true;
       }
     });
 
-    // Stop walking when button is released
+    // Stop movement when button is released
     document.getElementById("walkLeftButton").addEventListener("mouseup", () => {
       mario.speedX = 0;
     });
