@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flappy Bird</title>
+  <title>Super Mario Style Game with Platform</title>
   <style>
     body {
       margin: 0;
@@ -11,181 +11,137 @@
     }
     canvas {
       display: block;
-      background: #70c5ce;
-    }
-    #flyButton {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #ffcc00;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      box-shadow: 0 4px #b38f00;
-    }
-    #flyButton:active {
-      box-shadow: 0 2px #b38f00;
-      transform: translate(-50%, 2px);
-    }
-
-    #retryButton {
-      display: none;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 10px 20px;
-      font-size: 18px;
-      background-color: #ff6666;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      box-shadow: 0 4px #b30000;
-    }
-    #retryButton:active {
-      box-shadow: 0 2px #b30000;
-      transform: translate(-50%, calc(-50% + 2px));
+      background-color: #87CEEB;
     }
   </style>
 </head>
 <body>
-  <canvas id="flappyBird"></canvas>
-  <button id="flyButton">Fly</button>
-  <button id="retryButton">Retry</button>
+  <canvas id="marioGame"></canvas>
 
   <script>
-    const canvas = document.getElementById("flappyBird");
+    const canvas = document.getElementById("marioGame");
     const ctx = canvas.getContext("2d");
 
-    canvas.width = 400;
-    canvas.height = 600;
+    canvas.width = 800;
+    canvas.height = 400;
 
     // Game variables
-    let bird;
-    let pipes;
-    let pipeTimer;
-    let score;
-    let isGameOver;
-    let gameStarted = false;
+    let mario;
+    let ground = canvas.height - 50;
+    let gravity = 0.8;
+    let jumpStrength = -15;
+    let moveSpeed = 5;
+    let isJumping = false;
+    let gameOver = false;
+    let platform;
 
-    const gravity = 0.5; // Reduced gravity
-    const lift = -7.5; // Reduced lift
-    const pipeSpeed = 0.5; // Reduced pipe movement speed
-    const pipeSpawnRate = 400; // Slower pipe spawn rate
-
+    // Initialize Mario and Platform
     function init() {
-      bird = {
+      mario = {
         x: 50,
-        y: 150,
-        width: 30,
-        height: 30,
-        velocity: 0,
+        y: ground - 40,
+        width: 40,
+        height: 40,
+        velocityY: 0,
+        speedX: 0,
       };
 
-      pipes = [];
-      pipeTimer = 0;
-      score = 0;
-      isGameOver = false;
-      gameStarted = false;
+      // Platform setup
+      platform = {
+        x: 200,
+        y: 250,
+        width: 300,
+        height: 20,
+      };
 
-      document.getElementById("retryButton").style.display = "none";
-      document.getElementById("flyButton").disabled = false;
-      drawInitialScreen();
+      gameOver = false;
+      update();
     }
 
-    function drawInitialScreen() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "yellow";
-      ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
-
-      ctx.fillStyle = "#fff";
-      ctx.font = "20px Arial";
-      ctx.fillText("Click Fly to Start", canvas.width / 2 - 80, canvas.height / 2);
+    // Draw Mario
+    function drawMario() {
+      ctx.fillStyle = "blue";
+      ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
     }
 
-    document.getElementById("flyButton").addEventListener("click", () => {
-      if (!gameStarted) {
-        gameStarted = true;
-        update();
+    // Draw ground
+    function drawGround() {
+      ctx.fillStyle = "#228B22";
+      ctx.fillRect(0, ground, canvas.width, 50);
+    }
+
+    // Draw platform
+    function drawPlatform() {
+      ctx.fillStyle = "#8B4513";
+      ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+    }
+
+    // Handle user input
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") {
+        mario.speedX = moveSpeed;
       }
-      bird.velocity = lift;
+      if (e.key === "ArrowLeft") {
+        mario.speedX = -moveSpeed;
+      }
+      if (e.key === " " && !isJumping) {
+        mario.velocityY = jumpStrength;
+        isJumping = true;
+      }
     });
 
-    document.getElementById("retryButton").addEventListener("click", init);
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        mario.speedX = 0;
+      }
+    });
 
-    // Game loop
+    // Game update loop
     function update() {
-      if (isGameOver) return;
+      if (gameOver) return;
 
+      // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw the bird
-      ctx.fillStyle = "yellow";
-      ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
+      // Update Mario's position
+      mario.y += mario.velocityY;
+      mario.x += mario.speedX;
 
-      // Update bird position
-      bird.velocity += gravity;
-      bird.y += bird.velocity;
-
-      // Prevent bird from falling off the canvas
-      if (bird.y + bird.height > canvas.height || bird.y < 0) {
-        gameOver();
+      // Apply gravity
+      if (mario.y + mario.height < ground) {
+        mario.velocityY += gravity;
+      } else {
+        mario.velocityY = 0;
+        mario.y = ground - mario.height;
+        isJumping = false;
       }
 
-      // Handle pipes
-      if (pipeTimer === 0) {
-        const pipeY = Math.random() * (canvas.height - 150 - 100) + 50;
-        pipes.push({ x: canvas.width, y: pipeY });
-      }
-      pipeTimer++;
-      if (pipeTimer > pipeSpawnRate) {
-        pipeTimer = 0;
-      }
-
-      for (let i = 0; i < pipes.length; i++) {
-        const pipe = pipes[i];
-        pipe.x -= pipeSpeed;
-
-        // Draw pipes
-        ctx.fillStyle = "green";
-        ctx.fillRect(pipe.x, 0, 50, pipe.y);
-        ctx.fillRect(pipe.x, pipe.y + 150, 50, canvas.height - pipe.y - 150);
-
-        // Check for collision
-        if (
-          bird.x < pipe.x + 50 &&
-          bird.x + bird.width > pipe.x &&
-          (bird.y < pipe.y || bird.y + bird.height > pipe.y + 150)
-        ) {
-          gameOver();
-        }
-
-        // Remove pipes that are out of bounds
-        if (pipe.x + 50 < 0) {
-          pipes.splice(i, 1);
-          score++;
-        }
+      // Check if Mario is colliding with the platform
+      if (
+        mario.x + mario.width > platform.x &&
+        mario.x < platform.x + platform.width &&
+        mario.y + mario.height <= platform.y && // Mario must be above the platform
+        mario.velocityY >= 0
+      ) {
+        mario.velocityY = 0;
+        mario.y = platform.y - mario.height;
+        isJumping = false;
       }
 
-      // Draw score
-      ctx.fillStyle = "#fff";
-      ctx.font = "20px Arial";
-      ctx.fillText(`Score: ${score}`, 10, 30);
+      // Draw everything
+      drawGround();
+      drawPlatform();
+      drawMario();
 
+      // Check for boundaries
+      if (mario.x < 0) mario.x = 0;
+      if (mario.x + mario.width > canvas.width) mario.x = canvas.width - mario.width;
+
+      // Request next frame
       requestAnimationFrame(update);
     }
 
-    function gameOver() {
-      isGameOver = true;
-      ctx.fillStyle = "red";
-      ctx.font = "40px Arial";
-      ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2);
-      document.getElementById("retryButton").style.display = "block";
-    }
-
+    // Initialize the game
     init();
   </script>
 </body>
