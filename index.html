@@ -3,237 +3,122 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hen Sound-Based Game</title>
+  <title>Flappy Bird</title>
   <style>
     body {
       margin: 0;
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      font-family: Arial, sans-serif;
-    }
-    #webcam {
-      flex: 1;
-      background: black;
-    }
-    #gameCanvas {
-      flex: 1;
-      background: lightblue;
     }
     canvas {
       display: block;
-    }
-    .screen {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 20px;
-      margin-top: 20px;
-      cursor: pointer;
+      background: #70c5ce;
     }
   </style>
 </head>
 <body>
-  <!-- Webcam feed -->
-  <video id="webcam" autoplay muted></video>
-
-  <!-- Game canvas -->
-  <canvas id="gameCanvas"></canvas>
-
-  <!-- Guide screen -->
-  <div id="guideScreen" class="screen">
-    <h1>Welcome to the Hen Game!</h1>
-    <p>
-      🐔 Make short "Bek" sounds to make the hen walk.<br>
-      🐔 Make louder or longer "Bek" sounds to make the hen jump.<br>
-      🎮 Avoid falling and land safely on platforms!
-    </p>
-    <button onclick="showStartScreen()">Next</button>
-  </div>
-
-  <!-- Start screen -->
-  <div id="startScreen" class="screen" style="display: none;">
-    <h1>Hen Sound-Based Game</h1>
-    <p>Are you ready to guide the hen to victory?</p>
-    <button onclick="startGame()">Start</button>
-  </div>
-
-  <!-- Game Over screen -->
-  <div id="gameOverScreen" class="screen" style="display: none;">
-    <h1>Game Over</h1>
-    <p>Your hen fell! Try again?</p>
-    <button onclick="resetGame()">Try Again</button>
-  </div>
+  <canvas id="flappyBird"></canvas>
 
   <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const webcam = document.getElementById('webcam');
-    const guideScreen = document.getElementById('guideScreen');
-    const startScreen = document.getElementById('startScreen');
-    const gameOverScreen = document.getElementById('gameOverScreen');
+    const canvas = document.getElementById("flappyBird");
+    const ctx = canvas.getContext("2d");
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight / 2;
+    canvas.width = 400;
+    canvas.height = 600;
 
-    const GRAVITY = 0.5;
-    const HEN_WIDTH = 50;
-    const HEN_HEIGHT = 50;
+    // Game variables
+    const bird = {
+      x: 50,
+      y: 150,
+      width: 30,
+      height: 30,
+      gravity: 2,
+      lift: -30,
+      velocity: 0,
+    };
 
-    let henX = 50;
-    let henY = canvas.height - HEN_HEIGHT;
-    let henVelocityY = 0;
-    let henWalking = false;
-    let platforms = [];
+    const pipes = [];
+    const pipeWidth = 50;
+    const pipeGap = 150;
+    let pipeTimer = 0;
+
+    let score = 0;
     let isGameOver = false;
-    let soundThresholdWalk = 10;
-    let soundThresholdJump = 20;
 
-    // Webcam
-    navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-      webcam.srcObject = stream;
+    // Event listener for bird jump
+    document.addEventListener("keydown", () => {
+      bird.velocity = bird.lift;
     });
-
-    // Hen sprite
-    const henImage = new Image();
-    henImage.src = 'https://i.imgur.com/sjaXlz7.png'; // Hen character image
-
-    // Background platform sprite
-    const platformImage = new Image();
-    platformImage.src = 'https://i.imgur.com/2wR8A3V.png'; // Platform image
-
-    // Sound
-    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-      const audioContext = new AudioContext();
-      const analyser = audioContext.createAnalyser();
-      const microphone = audioContext.createMediaStreamSource(stream);
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-      analyser.fftSize = 256;
-      microphone.connect(analyser);
-
-      function analyzeAudio() {
-        if (isGameOver) return;
-        analyser.getByteFrequencyData(dataArray);
-        const volume = dataArray.reduce((sum, val) => sum + val, 0) / dataArray.length;
-
-        if (volume > soundThresholdJump && henY >= canvas.height - HEN_HEIGHT) {
-          henVelocityY = -12 - (volume / 20); // Jump
-        } else if (volume > soundThresholdWalk && volume <= soundThresholdJump) {
-          henWalking = true; // Walk
-        } else {
-          henWalking = false;
-        }
-
-        requestAnimationFrame(analyzeAudio);
-      }
-      analyzeAudio();
-    });
-
-    // Generate platforms
-    function generatePlatforms() {
-      platforms = [];
-      for (let i = 0; i < 5; i++) {
-        const width = 100;
-        const height = 10;
-        const x = Math.random() * (canvas.width - width);
-        const y = canvas.height - i * 120;
-        platforms.push({ x, y, width, height });
-      }
-    }
-
-    // Show start screen
-    function showStartScreen() {
-      guideScreen.style.display = 'none';
-      startScreen.style.display = 'flex';
-    }
-
-    // Start game
-    function startGame() {
-      startScreen.style.display = 'none';
-      gameOverScreen.style.display = 'none';
-      isGameOver = false;
-      generatePlatforms();
-      henX = 50;
-      henY = canvas.height - HEN_HEIGHT;
-      henVelocityY = 0;
-      gameLoop();
-    }
-
-    // Reset game
-    function resetGame() {
-      henX = 50;
-      henY = canvas.height - HEN_HEIGHT;
-      henVelocityY = 0;
-      startGame();
-    }
-
-    // Draw hen
-    function drawHen() {
-      if (henWalking) henX += 2; // Move forward
-      ctx.drawImage(henImage, henX, henY, HEN_WIDTH, HEN_HEIGHT);
-    }
-
-    // Draw platforms
-    function drawPlatforms() {
-      platforms.forEach((platform) => {
-        ctx.drawImage(platformImage, platform.x, platform.y, platform.width, platform.height);
-      });
-    }
-
-    // Update game
-    function updateGame() {
-      henVelocityY += GRAVITY;
-      henY += henVelocityY;
-
-      if (henY > canvas.height) {
-        isGameOver = true;
-        gameOverScreen.style.display = 'flex';
-      }
-
-      if (henY >= canvas.height - HEN_HEIGHT) {
-        henY = canvas.height - HEN_HEIGHT;
-        henVelocityY = 0;
-      }
-
-      platforms.forEach((platform) => {
-        if (
-          henX < platform.x + platform.width &&
-          henX + HEN_WIDTH > platform.x &&
-          henY + HEN_HEIGHT >= platform.y &&
-          henY + HEN_HEIGHT <= platform.y + platform.height &&
-          henVelocityY >= 0
-        ) {
-          henY = platform.y - HEN_HEIGHT;
-          henVelocityY = 0;
-        }
-      });
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawPlatforms();
-      drawHen();
-    }
 
     // Game loop
-    function gameLoop() {
-      if (!isGameOver) {
-        updateGame();
-        requestAnimationFrame(gameLoop);
+    function update() {
+      if (isGameOver) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw the bird
+      ctx.fillStyle = "yellow";
+      ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
+
+      // Update bird position
+      bird.velocity += bird.gravity;
+      bird.y += bird.velocity;
+
+      // Prevent bird from falling off the canvas
+      if (bird.y + bird.height > canvas.height || bird.y < 0) {
+        gameOver();
       }
+
+      // Handle pipes
+      if (pipeTimer === 0) {
+        const pipeY = Math.random() * (canvas.height - pipeGap - 100) + 50;
+        pipes.push({ x: canvas.width, y: pipeY });
+      }
+      pipeTimer++;
+      if (pipeTimer > 100) {
+        pipeTimer = 0;
+      }
+
+      for (let i = 0; i < pipes.length; i++) {
+        const pipe = pipes[i];
+        pipe.x -= 2;
+
+        // Draw pipes
+        ctx.fillStyle = "green";
+        ctx.fillRect(pipe.x, 0, pipeWidth, pipe.y);
+        ctx.fillRect(pipe.x, pipe.y + pipeGap, pipeWidth, canvas.height - pipe.y - pipeGap);
+
+        // Check for collision
+        if (
+          bird.x < pipe.x + pipeWidth &&
+          bird.x + bird.width > pipe.x &&
+          (bird.y < pipe.y || bird.y + bird.height > pipe.y + pipeGap)
+        ) {
+          gameOver();
+        }
+
+        // Remove pipes that are out of bounds
+        if (pipe.x + pipeWidth < 0) {
+          pipes.splice(i, 1);
+          score++;
+        }
+      }
+
+      // Draw score
+      ctx.fillStyle = "#fff";
+      ctx.font = "20px Arial";
+      ctx.fillText(`Score: ${score}`, 10, 30);
+
+      requestAnimationFrame(update);
     }
+
+    function gameOver() {
+      isGameOver = true;
+      ctx.fillStyle = "red";
+      ctx.font = "40px Arial";
+      ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2);
+    }
+
+    update();
   </script>
 </body>
 </html>
