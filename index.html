@@ -102,12 +102,20 @@
       console.log("Speech recognition ended.");
     };
 
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      if (event.error === "not-allowed") {
+        alert("Please allow microphone access to play.");
+      }
+    };
+
     recognition.onresult = (event) => {
       let loudness = 0;
       for (let i = event.resultIndex; i < event.results.length; i++) {
         loudness = Math.max(loudness, event.results[i][0].confidence);
       }
       voiceIntensity = loudness * 10; // Scale voice intensity for effect
+      console.log("Voice Intensity:", voiceIntensity);
     };
 
     // Start the recognition when the game starts
