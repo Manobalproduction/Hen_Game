@@ -3,18 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Super Mario Style Game with Platform and Buttons</title>
+  <title>Camera & Game</title>
   <style>
     body {
       margin: 0;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: transparent;
+    }
+    #camera {
+      flex: 1;
+      background: black;
+    }
+    #gameContainer {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: transparent;
     }
     canvas {
+      background: transparent;
       display: block;
-      background-color: #87CEEB;
     }
     button {
-      position: absolute;
+      position: fixed;
+      bottom: 10%;
+      left: 50%;
+      transform: translateX(-50%);
       padding: 10px 20px;
       font-size: 16px;
       background-color: #ffcc00;
@@ -25,62 +42,36 @@
     }
     button:active {
       box-shadow: 0 2px #b38f00;
-      transform: translateY(2px);
-    }
-    #startButton {
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
-    #retryButton {
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, 50%);
-      display: none;
-    }
-    #walkLeftButton, #walkRightButton, #jumpButton {
-      top: 80%;
-      transform: translateX(-50%);
-      width: 100px;
-      font-size: 14px;
-    }
-    #walkLeftButton {
-      left: 25%;
-    }
-    #walkRightButton {
-      left: 50%;
-    }
-    #jumpButton {
-      left: 75%;
+      transform: translate(-50%, 2px);
     }
   </style>
 </head>
 <body>
-  <canvas id="marioGame"></canvas>
-  <button id="startButton">Start Game</button>
-  <button id="retryButton">Retry</button>
-  <button id="walkLeftButton">Walk Left</button>
-  <button id="walkRightButton">Walk Right</button>
-  <button id="jumpButton">Jump</button>
+  <!-- Camera feed -->
+  <video id="camera" autoplay muted></video>
+  
+  <!-- Game area -->
+  <div id="gameContainer">
+    <canvas id="marioGame"></canvas>
+  </div>
 
   <script>
     const canvas = document.getElementById("marioGame");
     const ctx = canvas.getContext("2d");
 
-    canvas.width = 800;
-    canvas.height = 400;
+    // Set canvas dimensions for portrait mode
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight / 2;
 
-    // Game variables
+    // Variables for the game
     let mario;
     let ground = canvas.height - 50;
     let gravity = 0.8;
-    let jumpStrength = -15;
+    let jumpStrength = -10; // Reduced jump distance
     let moveSpeed = 5;
     let isJumping = false;
-    let gameOver = false;
-    let platform;
 
-    // Initialize Mario and Platform
+    // Initialize Mario
     function init() {
       mario = {
         x: 50,
@@ -88,20 +79,7 @@
         width: 40,
         height: 40,
         velocityY: 0,
-        speedX: 0,
       };
-
-      // Platform setup
-      platform = {
-        x: 200,
-        y: 250,
-        width: 300,
-        height: 20,
-      };
-
-      gameOver = false;
-      document.getElementById("startButton").style.display = "none";
-      document.getElementById("retryButton").style.display = "none";
       update();
     }
 
@@ -117,104 +95,62 @@
       ctx.fillRect(0, ground, canvas.width, 50);
     }
 
-    // Draw platform
-    function drawPlatform() {
-      ctx.fillStyle = "#8B4513";
-      ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
-    }
-
-    // Handle user input for walking and jumping
-    document.getElementById("walkLeftButton").addEventListener("click", () => {
-      // Move left by one small step
-      if (mario.x > 0) mario.x -= moveSpeed;
-    });
-
-    document.getElementById("walkRightButton").addEventListener("click", () => {
-      // Move right by one small step
-      if (mario.x + mario.width < canvas.width) mario.x += moveSpeed;
-    });
-
-    document.getElementById("jumpButton").addEventListener("click", () => {
-      if (!isJumping) {
-        mario.velocityY = jumpStrength;
-        mario.speedX += 5; // Make the jump move a little forward
+    // Event listeners for movement
+    document.body.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft" && mario.x > 0) {
+        mario.x -= moveSpeed; // Move left
+      } else if (event.key === "ArrowRight" && mario.x + mario.width < canvas.width) {
+        mario.x += moveSpeed; // Move right
+      } else if (event.key === " " && !isJumping) {
+        mario.velocityY = jumpStrength; // Jump
+        mario.x += moveSpeed * 0.4; // Forward movement while jumping
         isJumping = true;
       }
     });
 
-    // Stop movement when button is released
-    document.getElementById("walkLeftButton").addEventListener("mouseup", () => {
-      mario.speedX = 0;
-    });
-
-    document.getElementById("walkRightButton").addEventListener("mouseup", () => {
-      mario.speedX = 0;
-    });
-
-    // Game update loop
+    // Update game loop
     function update() {
-      if (gameOver) return;
-
-      // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Update Mario's position
-      mario.y += mario.velocityY;
-      mario.x += mario.speedX;
-
       // Apply gravity
-      if (mario.y + mario.height < ground) {
-        mario.velocityY += gravity;
-      } else {
-        mario.velocityY = 0;
+      mario.velocityY += gravity;
+      mario.y += mario.velocityY;
+
+      // Check ground collision
+      if (mario.y + mario.height >= ground) {
         mario.y = ground - mario.height;
-        isJumping = false;
-      }
-
-      // Check if Mario is colliding with the platform
-      if (
-        mario.x + mario.width > platform.x &&
-        mario.x < platform.x + platform.width &&
-        mario.y + mario.height <= platform.y && // Mario must be above the platform
-        mario.velocityY >= 0
-      ) {
         mario.velocityY = 0;
-        mario.y = platform.y - mario.height;
         isJumping = false;
       }
 
-      // Draw everything
-      drawGround();
-      drawPlatform();
-      drawMario();
-
-      // Check for boundaries
+      // Prevent Mario from going off-screen
       if (mario.x < 0) mario.x = 0;
       if (mario.x + mario.width > canvas.width) mario.x = canvas.width - mario.width;
 
-      // Request next frame
+      // Draw game elements
+      drawGround();
+      drawMario();
+
       requestAnimationFrame(update);
     }
 
-    // Game over function
-    function gameOverFunction() {
-      gameOver = true;
-      document.getElementById("retryButton").style.display = "block";
+    // Initialize camera
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        const camera = document.getElementById("camera");
+        camera.srcObject = stream;
+      } catch (error) {
+        console.error("Error accessing the camera:", error);
+        alert("Unable to access the camera. Please allow camera access.");
+      }
     }
 
-    // Start button click handler
-    document.getElementById("startButton").addEventListener("click", () => {
+    // Start the game and camera
+    window.onload = () => {
+      startCamera();
       init();
-    });
-
-    // Retry button click handler
-    document.getElementById("retryButton").addEventListener("click", () => {
-      init();
-    });
-
-    // Initialize the game with the start button visible
-    document.getElementById("startButton").style.display = "block";
-
+    };
   </script>
 </body>
 </html>
