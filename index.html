@@ -71,10 +71,11 @@
     let isGameOver;
     let gameStarted = false;
 
-    const gravity = 0.5; // Reduced gravity
-    const lift = -7.5; // Reduced lift
-    const pipeSpeed = 0.5; // Reduced pipe movement speed
-    const pipeSpawnRate = 400; // Slower pipe spawn rate
+    // Adjusted difficulty settings
+    const gravity = 0.2; // Reduced gravity for slower descent
+    const lift = -10; // Increased lift to give more control
+    const pipeSpeed = 0.3; // Slower pipe movement speed
+    const pipeSpawnRate = 600; // Slower pipe spawn rate
 
     function init() {
       bird = {
