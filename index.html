@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Platform Game with Game Over</title>
+  <title>Platform Game</title>
   <style>
     body {
       margin: 0;
@@ -41,10 +41,15 @@
     }
     #jumpButton {
       bottom: 10%;
-      left: 50%;
+      left: 60%;
       transform: translateX(-50%);
       width: 100px;
-      font-size: 14px;
+    }
+    #walkButton {
+      bottom: 10%;
+      left: 40%;
+      transform: translateX(-50%);
+      width: 100px;
     }
   </style>
 </head>
@@ -52,6 +57,7 @@
   <canvas id="gameCanvas"></canvas>
   <button id="startButton">Start Game</button>
   <button id="retryButton">Retry</button>
+  <button id="walkButton">Walk</button>
   <button id="jumpButton">Jump</button>
 
   <script>
@@ -65,8 +71,9 @@
     let mario;
     let gravity = 0.6;
     let jumpStrength = -12;
-    let moveSpeed = 1.5; // 70% slower
+    let moveSpeed = 1.5; // 70% slower movement
     let isJumping = false;
+    let gameStarted = false;
     let gameOver = false;
     let platforms = [];
     let scrollOffset = 0;
@@ -75,21 +82,23 @@
     function init() {
       mario = {
         x: 50,
-        y: canvas.height - 120,
+        y: canvas.height - 200,
         width: 40,
         height: 40,
         velocityY: 0,
+        speedX: 0,
       };
 
       // Create initial platforms
       platforms = [
-        { x: 0, y: canvas.height - 150, width: 150, height: 20 },
+        { x: 0, y: canvas.height - 200, width: 150, height: 20 },
         { x: 200, y: canvas.height - 300, width: 100, height: 20 },
-        { x: 400, y: canvas.height - 200, width: 120, height: 20 },
+        { x: 400, y: canvas.height - 250, width: 120, height: 20 },
       ];
 
       scrollOffset = 0;
       gameOver = false;
+      gameStarted = false;
       document.getElementById("startButton").style.display = "none";
       document.getElementById("retryButton").style.display = "none";
       update();
@@ -109,14 +118,6 @@
       });
     }
 
-    // Handle jump button
-    document.getElementById("jumpButton").addEventListener("click", () => {
-      if (!isJumping) {
-        mario.velocityY = jumpStrength;
-        isJumping = true;
-      }
-    });
-
     // Game update loop
     function update() {
       if (gameOver) return;
@@ -124,47 +125,46 @@
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Update Mario's position
-      mario.y += mario.velocityY;
+      // Update Mario's position only after the game starts
+      if (gameStarted) {
+        mario.y += mario.velocityY;
+        mario.velocityY += gravity;
+        mario.x += mario.speedX;
+        scrollOffset += moveSpeed;
 
-      // Apply gravity
-      mario.velocityY += gravity;
+        // Check if Mario is colliding with platforms
+        let isOnPlatform = false;
+        platforms.forEach(platform => {
+          if (
+            mario.x + mario.width > platform.x - scrollOffset &&
+            mario.x < platform.x - scrollOffset + platform.width &&
+            mario.y + mario.height >= platform.y &&
+            mario.y + mario.height <= platform.y + 10 && // Allow small tolerance
+            mario.velocityY >= 0
+          ) {
+            mario.velocityY = 0;
+            mario.y = platform.y - mario.height;
+            isJumping = false;
+            isOnPlatform = true;
+          }
+        });
 
-      // Update scrolling
-      scrollOffset += moveSpeed;
-
-      // Check if Mario is colliding with platforms
-      let isOnPlatform = false;
-      platforms.forEach(platform => {
-        if (
-          mario.x + mario.width > platform.x - scrollOffset &&
-          mario.x < platform.x - scrollOffset + platform.width &&
-          mario.y + mario.height >= platform.y &&
-          mario.y + mario.height <= platform.y + 10 && // Allow small tolerance
-          mario.velocityY >= 0
-        ) {
-          mario.velocityY = 0;
-          mario.y = platform.y - mario.height;
-          isJumping = false;
-          isOnPlatform = true;
+        // End game if Mario falls below platforms
+        if (!isOnPlatform && mario.y + mario.height >= canvas.height) {
+          gameOverFunction();
         }
-      });
 
-      // End game if Mario falls below platforms
-      if (!isOnPlatform && mario.y + mario.height >= canvas.height) {
-        gameOverFunction();
-      }
-
-      // Generate new platforms as old ones scroll off-screen
-      if (platforms[0].x - scrollOffset + platforms[0].width < 0) {
-        platforms.shift();
-        const newPlatform = {
-          x: platforms[platforms.length - 1].x + 200 + Math.random() * 200,
-          y: canvas.height - 100 - Math.random() * 200,
-          width: 100 + Math.random() * 50,
-          height: 20,
-        };
-        platforms.push(newPlatform);
+        // Generate new platforms as old ones scroll off-screen
+        if (platforms[0].x - scrollOffset + platforms[0].width < 0) {
+          platforms.shift();
+          const newPlatform = {
+            x: platforms[platforms.length - 1].x + 200 + Math.random() * 200,
+            y: canvas.height - 150 - Math.random() * 300,
+            width: 100 + Math.random() * 50,
+            height: 20,
+          };
+          platforms.push(newPlatform);
+        }
       }
 
       // Draw everything
@@ -189,6 +189,22 @@
     // Retry button click handler
     document.getElementById("retryButton").addEventListener("click", () => {
       init();
+    });
+
+    // Jump button handler
+    document.getElementById("jumpButton").addEventListener("click", () => {
+      if (!gameStarted) gameStarted = true;
+      if (!isJumping) {
+        mario.velocityY = jumpStrength;
+        mario.speedX = 2;
+        isJumping = true;
+      }
+    });
+
+    // Walk button handler
+    document.getElementById("walkButton").addEventListener("click", () => {
+      if (!gameStarted) gameStarted = true;
+      mario.speedX = 1;
     });
 
     // Initialize the game with the start button visible
