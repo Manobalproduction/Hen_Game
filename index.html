@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Platform Game</title>
+  <title>Parabolic Jump</title>
   <style>
     body {
       margin: 0;
@@ -39,15 +39,17 @@
       transform: translate(-50%, -50%);
       display: none;
     }
-    #walkButton {
-      bottom: 10%;
-      left: 30%;
-      transform: translateX(-50%);
-    }
     #jumpButton {
       bottom: 10%;
-      left: 70%;
+      left: 60%;
       transform: translateX(-50%);
+      width: 100px;
+    }
+    #walkButton {
+      bottom: 10%;
+      left: 40%;
+      transform: translateX(-50%);
+      width: 100px;
     }
   </style>
 </head>
@@ -69,51 +71,41 @@
     let mario;
     let gravity = 0.6;
     let jumpStrength = -12;
-    let scrollSpeed = 2;
+    let forwardSpeed = 4; // Horizontal speed for the jump
     let isJumping = false;
-    let isWalking = false;
     let gameStarted = false;
     let gameOver = false;
-    let obstacles = [];
-    let score = 0;
+    let platforms = [];
+    let scrollOffset = 0;
 
-    // Initialize Mario
+    // Initialize Platforms
+    function initPlatforms() {
+      platforms = [
+        { x: 0, y: canvas.height - 200, width: 150, height: 20 },
+        { x: 200, y: canvas.height - 300, width: 100, height: 20 },
+        { x: 400, y: canvas.height - 250, width: 120, height: 20 },
+      ];
+    }
+
+    // Initialize Mario and start the game
     function init() {
+      initPlatforms();
+
       mario = {
         x: 50,
-        y: canvas.height - 100,
+        y: platforms[0].y - 40, // Align Mario to the first platform
         width: 40,
         height: 40,
         velocityY: 0,
-        velocityX: 0,
+        velocityX: 0, // Horizontal velocity for parabolic jump
       };
 
-      obstacles = [];
-      score = 0;
+      scrollOffset = 0;
       gameOver = false;
       gameStarted = false;
-      isWalking = false;
-
       document.getElementById("startButton").style.display = "none";
       document.getElementById("retryButton").style.display = "none";
-
-      spawnObstacles(); // Start generating obstacles
       update();
-    }
-
-    // Spawn obstacles at intervals
-    function spawnObstacles() {
-      setInterval(() => {
-        if (gameOver || !gameStarted) return;
-
-        const obstacle = {
-          x: canvas.width,
-          y: canvas.height - 150 - Math.random() * 200,
-          width: 60,
-          height: 20,
-        };
-        obstacles.push(obstacle);
-      }, 1500); // New obstacle every 1.5 seconds
     }
 
     // Draw Mario
@@ -122,77 +114,70 @@
       ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
     }
 
-    // Draw obstacles
-    function drawObstacles() {
-      ctx.fillStyle = "#8B4513"; // Brown bars
-      obstacles.forEach(obstacle => {
-        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+    // Draw platforms
+    function drawPlatforms() {
+      ctx.fillStyle = "#8B4513";
+      platforms.forEach(platform => {
+        ctx.fillRect(platform.x - scrollOffset, platform.y, platform.width, platform.height);
       });
     }
 
-    // Update game logic
+    // Game update loop
     function update() {
       if (gameOver) return;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       if (gameStarted) {
-        // Mario movement
         mario.y += mario.velocityY;
-        mario.velocityY += gravity;
+        mario.velocityY += gravity; // Apply gravity
 
-        // Horizontal movement if walking
-        if (isWalking) mario.velocityX = scrollSpeed;
-        else mario.velocityX = 0;
+        mario.x += mario.velocityX; // Apply horizontal velocity
 
-        // Scroll obstacles and update score
-        obstacles.forEach(obstacle => {
-          obstacle.x -= mario.velocityX;
-
-          // Collision detection
+        let isOnPlatform = false;
+        platforms.forEach(platform => {
           if (
-            mario.x < obstacle.x + obstacle.width &&
-            mario.x + mario.width > obstacle.x &&
-            mario.y + mario.height > obstacle.y &&
-            mario.y < obstacle.y + obstacle.height
+            mario.x + mario.width > platform.x - scrollOffset &&
+            mario.x < platform.x - scrollOffset + platform.width &&
+            mario.y + mario.height >= platform.y &&
+            mario.y + mario.height <= platform.y + 10 && // Allow small tolerance
+            mario.velocityY >= 0
           ) {
-            gameOverFunction();
+            mario.velocityY = 0;
+            mario.y = platform.y - mario.height;
+            isJumping = false;
+            mario.velocityX = 0; // Stop horizontal movement
+            isOnPlatform = true;
           }
         });
 
-        // Remove off-screen obstacles
-        obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
-
-        // Prevent Mario from falling off the canvas
-        if (mario.y + mario.height >= canvas.height) {
-          mario.y = canvas.height - mario.height;
-          mario.velocityY = 0;
-          isJumping = false;
+        if (!isOnPlatform && mario.y + mario.height >= canvas.height) {
+          gameOverFunction();
         }
 
-        // Update score
-        score += 0.1;
+        if (platforms[0].x - scrollOffset + platforms[0].width < 0) {
+          platforms.shift();
+          const newPlatform = {
+            x: platforms[platforms.length - 1].x + 200 + Math.random() * 200,
+            y: canvas.height - 150 - Math.random() * 300,
+            width: 100 + Math.random() * 50,
+            height: 20,
+          };
+          platforms.push(newPlatform);
+        }
       }
 
-      // Draw everything
+      drawPlatforms();
       drawMario();
-      drawObstacles();
-
-      // Display score
-      ctx.fillStyle = "black";
-      ctx.font = "20px Arial";
-      ctx.fillText(`Score: ${Math.floor(score)}`, 10, 30);
 
       requestAnimationFrame(update);
     }
 
-    // Game over function
     function gameOverFunction() {
       gameOver = true;
       document.getElementById("retryButton").style.display = "block";
     }
 
-    // Event listeners for buttons
     document.getElementById("startButton").addEventListener("click", () => {
       init();
     });
@@ -201,25 +186,22 @@
       init();
     });
 
-    document.getElementById("walkButton").addEventListener("mousedown", () => {
-      if (!gameStarted) gameStarted = true;
-      isWalking = true;
-    });
-
-    document.getElementById("walkButton").addEventListener("mouseup", () => {
-      isWalking = false;
-    });
-
     document.getElementById("jumpButton").addEventListener("click", () => {
       if (!gameStarted) gameStarted = true;
       if (!isJumping) {
-        mario.velocityY = jumpStrength; // Parabolic jump
+        mario.velocityY = jumpStrength; // Move upward
+        mario.velocityX = forwardSpeed; // Add forward movement
         isJumping = true;
       }
     });
 
-    // Initialize the game with the start button visible
+    document.getElementById("walkButton").addEventListener("click", () => {
+      if (!gameStarted) gameStarted = true;
+      mario.x += 10; // Step forward
+    });
+
     document.getElementById("startButton").style.display = "block";
   </script>
 </body>
 </html>
+
