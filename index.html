@@ -9,7 +9,6 @@
     let mario;
     let gravity = 0.18; // Slower gravity
     let jumpStrength = -3.6; // Slower jump
-    let scrollSpeed = 1.2; // Slower scrolling speed
     let isJumping = false;
     let gameStarted = false;
     let gameOver = false;
@@ -56,7 +55,7 @@
     // Draw Mario
     function drawMario() {
         ctx.fillStyle = "blue";
-        ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
+        ctx.fillRect(mario.x - scrollOffset, mario.y, mario.width, mario.height);
     }
 
     // Draw platforms
@@ -82,17 +81,20 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         if (gameStarted) {
-            scrollOffset += scrollSpeed;
-
             mario.y += mario.velocityY;
             mario.velocityY += gravity; // Apply slower gravity
+
+            // Adjust scrollOffset if Mario moves beyond the center
+            if (mario.x > canvas.width / 2) {
+                scrollOffset = mario.x - canvas.width / 2;
+            }
 
             // Check for platform collisions
             let isOnPlatform = false;
             platforms.forEach(platform => {
                 if (
-                    mario.x + mario.width > platform.x - scrollOffset &&
-                    mario.x < platform.x - scrollOffset + platform.width &&
+                    mario.x + mario.width > platform.x &&
+                    mario.x < platform.x + platform.width &&
                     mario.y + mario.height >= platform.y &&
                     mario.y + mario.height <= platform.y + 10 && // Allow small tolerance
                     mario.velocityY >= 0
@@ -107,8 +109,8 @@
             // Check for obstacle collisions
             obstacles.forEach(obstacle => {
                 if (
-                    mario.x + mario.width > obstacle.x - scrollOffset &&
-                    mario.x < obstacle.x - scrollOffset + obstacle.width &&
+                    mario.x + mario.width > obstacle.x &&
+                    mario.x < obstacle.x + obstacle.width &&
                     mario.y + mario.height > obstacle.y &&
                     mario.y < obstacle.y + obstacle.height
                 ) {
@@ -122,11 +124,11 @@
             }
 
             // Remove off-screen platforms and obstacles
-            platforms = platforms.filter(platform => platform.x - scrollOffset + platform.width > 0);
-            obstacles = obstacles.filter(obstacle => obstacle.x - scrollOffset + obstacle.width > 0);
+            platforms = platforms.filter(platform => platform.x + platform.width > scrollOffset);
+            obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > scrollOffset);
 
             // Generate new platforms
-            if (platforms[platforms.length - 1].x - scrollOffset < canvas.width) {
+            if (platforms[platforms.length - 1].x < scrollOffset + canvas.width) {
                 platforms.push({
                     x: platforms[platforms.length - 1].x + 200 + Math.random() * 200,
                     y: canvas.height - 150 - Math.random() * 300,
