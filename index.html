@@ -196,7 +196,8 @@
     document.getElementById("jumpButton").addEventListener("click", () => {
       if (!gameStarted) gameStarted = true;
       if (!isJumping) {
-        mario.velocityY = jumpStrength;
+        mario.velocityY = jumpStrength; // Move upward
+        mario.x += 20; // Move forward while jumping
         isJumping = true;
       }
     });
