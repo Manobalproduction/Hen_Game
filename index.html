@@ -90,7 +90,6 @@
     function init() {
       initPlatforms();
 
-      // Set Mario's initial position to be on top of the first platform
       mario = {
         x: 50,
         y: platforms[0].y - 40, // Align Mario to the first platform
@@ -125,15 +124,12 @@
     function update() {
       if (gameOver) return;
 
-      // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Update Mario's position only after the game starts
       if (gameStarted) {
         mario.y += mario.velocityY;
         mario.velocityY += gravity;
 
-        // Check if Mario is colliding with platforms
         let isOnPlatform = false;
         platforms.forEach(platform => {
           if (
@@ -150,12 +146,10 @@
           }
         });
 
-        // End game if Mario falls below platforms
         if (!isOnPlatform && mario.y + mario.height >= canvas.height) {
           gameOverFunction();
         }
 
-        // Generate new platforms as old ones scroll off-screen
         if (platforms[0].x - scrollOffset + platforms[0].width < 0) {
           platforms.shift();
           const newPlatform = {
@@ -168,49 +162,39 @@
         }
       }
 
-      // Draw everything
       drawPlatforms();
       drawMario();
 
-      // Request next frame
       requestAnimationFrame(update);
     }
 
-    // Game over function
     function gameOverFunction() {
       gameOver = true;
       document.getElementById("retryButton").style.display = "block";
     }
 
-    // Start button click handler
     document.getElementById("startButton").addEventListener("click", () => {
       init();
     });
 
-    // Retry button click handler
     document.getElementById("retryButton").addEventListener("click", () => {
       init();
     });
 
-    // Jump button handler
     document.getElementById("jumpButton").addEventListener("click", () => {
       if (!gameStarted) gameStarted = true;
       if (!isJumping) {
         mario.velocityY = jumpStrength; // Move upward
-        mario.x += 26; // Move forward while jumping (30% more forward)
+        mario.x += 36; // Move forward while jumping (40% more forward)
         isJumping = true;
       }
     });
 
-    // Walk button handler
     document.getElementById("walkButton").addEventListener("click", () => {
       if (!gameStarted) gameStarted = true;
-      
-      // Move Mario one step forward
-      mario.x += 10; // Adjust the step size as needed
+      mario.x += 10; // Step forward
     });
 
-    // Initialize the game with the start button visible
     document.getElementById("startButton").style.display = "block";
   </script>
 </body>
