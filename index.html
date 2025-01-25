@@ -1,4 +1,59 @@
-<script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parabolic Jump Game</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background-color: #87CEEB;
+      margin: 0 auto;
+    }
+    button {
+      position: absolute;
+      padding: 10px 20px;
+      font-size: 14px;
+      background-color: #ffcc00;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 4px #b38f00;
+    }
+    button:active {
+      box-shadow: 0 2px #b38f00;
+      transform: translateY(2px);
+    }
+    #startButton {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    #retryButton {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+    }
+    #jumpButton {
+      bottom: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <button id="startButton">Start Game</button>
+  <button id="retryButton">Retry</button>
+  <button id="jumpButton">Jump</button>
+
+  <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
@@ -165,4 +220,6 @@
     });
 
     document.getElementById("startButton").style.display = "block";
-</script>
+  </script>
+</body>
+</html>
