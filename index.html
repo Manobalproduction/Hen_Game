@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Platform Game</title>
+  <title>Parabolic Jump</title>
   <style>
     body {
       margin: 0;
@@ -71,13 +71,14 @@
     let mario;
     let gravity = 0.6;
     let jumpStrength = -12;
+    let forwardSpeed = 4; // Horizontal speed for the jump
     let isJumping = false;
     let gameStarted = false;
     let gameOver = false;
     let platforms = [];
     let scrollOffset = 0;
 
-    // Initialize Platforms first
+    // Initialize Platforms
     function initPlatforms() {
       platforms = [
         { x: 0, y: canvas.height - 200, width: 150, height: 20 },
@@ -96,6 +97,7 @@
         width: 40,
         height: 40,
         velocityY: 0,
+        velocityX: 0, // Horizontal velocity for parabolic jump
       };
 
       scrollOffset = 0;
@@ -128,7 +130,9 @@
 
       if (gameStarted) {
         mario.y += mario.velocityY;
-        mario.velocityY += gravity;
+        mario.velocityY += gravity; // Apply gravity
+
+        mario.x += mario.velocityX; // Apply horizontal velocity
 
         let isOnPlatform = false;
         platforms.forEach(platform => {
@@ -142,6 +146,7 @@
             mario.velocityY = 0;
             mario.y = platform.y - mario.height;
             isJumping = false;
+            mario.velocityX = 0; // Stop horizontal movement
             isOnPlatform = true;
           }
         });
@@ -185,7 +190,7 @@
       if (!gameStarted) gameStarted = true;
       if (!isJumping) {
         mario.velocityY = jumpStrength; // Move upward
-        mario.x += 36; // Move forward while jumping (40% more forward)
+        mario.velocityX = forwardSpeed; // Add forward movement
         isJumping = true;
       }
     });
@@ -199,3 +204,4 @@
   </script>
 </body>
 </html>
+
