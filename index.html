@@ -71,7 +71,6 @@
     let mario;
     let gravity = 0.6;
     let jumpStrength = -12;
-    let moveSpeed = 1.5; // 70% slower movement
     let isJumping = false;
     let gameStarted = false;
     let gameOver = false;
@@ -98,7 +97,6 @@
         width: 40,
         height: 40,
         velocityY: 0,
-        speedX: 0,
       };
 
       scrollOffset = 0;
@@ -134,8 +132,6 @@
       if (gameStarted) {
         mario.y += mario.velocityY;
         mario.velocityY += gravity;
-        mario.x += mario.speedX;
-        scrollOffset += moveSpeed;
 
         // Check if Mario is colliding with platforms
         let isOnPlatform = false;
@@ -201,7 +197,6 @@
       if (!gameStarted) gameStarted = true;
       if (!isJumping) {
         mario.velocityY = jumpStrength;
-        mario.speedX = 2;
         isJumping = true;
       }
     });
@@ -209,7 +204,9 @@
     // Walk button handler
     document.getElementById("walkButton").addEventListener("click", () => {
       if (!gameStarted) gameStarted = true;
-      mario.speedX = 1;
+      
+      // Move Mario one step forward
+      mario.x += 10; // Adjust the step size as needed
     });
 
     // Initialize the game with the start button visible
