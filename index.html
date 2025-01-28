@@ -3,203 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cube Game with Camera Background</title>
+    <title>Game</title>
     <style>
-        * {
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
-            background-color: #87ceeb;
             overflow: hidden;
-            margin: 0;
         }
-
-        #camera {
-            width: 100%;
-            height: 50%;
-            object-fit: cover;
-            z-index: -1;
+        #main_screen {
+            width: 100vw;
+            height: 100vh;
+            background-color: #87CEEB;
+        }
+        #title-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            color: white;
+        }
+        .parallax-layer {
             position: absolute;
             top: 0;
-        }
-
-        #game-container {
-            position: relative;
+            left: 0;
             width: 100%;
-            height: 50%;
-            background-color: #f3f3f3;
-            display: flex;
-            justify-content: flex-start;
-            align-items: flex-start;
-            overflow: hidden;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
         }
-
-        #buttons-container {
+        .tile, .hero-animations {
             position: absolute;
-            bottom: 20px;
-            width: 100%;
-            display: flex;
-            justify-content: space-around;
-            z-index: 1;
-        }
-
-        button {
-            background-color: #fff;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 18px;
-            cursor: pointer;
-        }
-
-        button:active {
-            transform: scale(0.95);
-        }
-
-        #character-container {
-            position: absolute;
-            left: 50%;
-            bottom: 80px;  /* Adjust vertical position */
-            transform: translateX(-50%);
-        }
-
-        #cube {
-            width: 50px;  /* Smaller size for character */
-            height: 50px;
-            background-color: red;
-            position: absolute;
-            bottom: 0;
-        }
-
-        .obstacle {
-            position: absolute;
-            bottom: 0;
-            width: 60px;
-            height: 30px;
-            background-color: #333;
-        }
-
-        @keyframes moveObstacle {
-            0% {
-                left: 100%;
-            }
-            100% {
-                left: -60px;
-            }
+            top: 0;
+            left: 0;
         }
     </style>
 </head>
 <body>
-    <video id="camera" autoplay playsinline></video>
-    <div id="game-container">
-        <div id="character-container">
-            <div id="cube"></div>
-        </div>
-        <div id="buttons-container">
-            <button id="walk-btn">Walk</button>
-            <button id="jump-btn">Jump</button>
-        </div>
+    <canvas id="main_screen"></canvas>
+    <div id="title-screen">
+        <h1>Welcome to the Game!</h1>
     </div>
+    <!-- Parallax Background Layers -->
+    <div id="parallax-mountain-bg" class="parallax-layer"></div>
+    <div id="parallax-mountain-montain-far" class="parallax-layer"></div>
+    <div id="parallax-mountain-mountains" class="parallax-layer"></div>
+    <div id="parallax-mountain-trees" class="parallax-layer"></div>
+    <div id="parallax-mountain-foreground-trees" class="parallax-layer"></div>
+
+    <!-- Tiles for the game -->
+    <div id="tiles" class="tile"></div>
+
+    <!-- Hero Animations -->
+    <img id="hero-idle-left" src="hero-idle-left.png" alt="Idle Left">
+    <img id="hero-idle-right" src="hero-idle-right.png" alt="Idle Right">
+    <img id="hero-run-left" src="hero-run-left.png" alt="Run Left">
+    <img id="hero-run-right" src="hero-run-right.png" alt="Run Right">
+    <img id="hero-jump-left" src="hero-jump-left.png" alt="Jump Left">
+    <img id="hero-jump-right" src="hero-jump-right.png" alt="Jump Right">
+    <img id="hero-attack-left" src="hero-attack-left.png" alt="Attack Left">
+    <img id="hero-attack-right" src="hero-attack-right.png" alt="Attack Right">
+    <img id="hero-crouch-left" src="hero-crouch-left.png" alt="Crouch Left">
+    <img id="hero-crouch-right" src="hero-crouch-right.png" alt="Crouch Right">
+    <img id="hero-hurt-left" src="hero-hurt-left.png" alt="Hurt Left">
+    <img id="hero-hurt-right" src="hero-hurt-right.png" alt="Hurt Right">
 
     <script>
-        // Access the camera
-        const videoElement = document.getElementById('camera');
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
-            .then((stream) => {
-                videoElement.srcObject = stream;
-            })
-            .catch((error) => {
-                console.error("Camera access denied or not available.", error);
-            });
+        const canvas = document.getElementById('main_screen');
+        const context = canvas.getContext("2d");
+        var pressedKeys = {};
+        window.onkeyup   = function(e) { pressedKeys[e.keyCode] = false; }
+        window.onkeydown = function(e) { pressedKeys[e.keyCode] = true;  }
 
-        // Cube Game Controls
-        const walkBtn = document.getElementById('walk-btn');
-        const jumpBtn = document.getElementById('jump-btn');
-        const cube = document.getElementById('cube');
+        const titleScreen = document.getElementById("title-screen");
 
-        let isJumping = false;
-        let isWalking = false;
-        let cubePosX = 0;
-        let cubePosY = 0;
-        let velocityY = 0;
-        let isOnGround = true;
-        const gravity = 0.5;  // Controls how fast the cube falls
-        const jumpStrength = -10;  // Strength of the jump
-        const walkSpeed = 5; // Speed at which the character walks
+        const layers = [
+            document.getElementById("parallax-mountain-bg"),
+            document.getElementById("parallax-mountain-montain-far"),
+            document.getElementById("parallax-mountain-mountains"),
+            document.getElementById("parallax-mountain-trees"),
+            document.getElementById("parallax-mountain-foreground-trees")
+        ];
 
-        // Walk Movement
-        walkBtn.addEventListener('click', () => {
-            if (!isWalking) {
-                isWalking = true;
-                cubePosX += walkSpeed;
-                cube.style.transition = 'transform 0.2s linear';
-                cube.style.transform = `translateX(${cubePosX}px)`;
-                setTimeout(() => {
-                    isWalking = false;
-                }, 200);
-            }
-        });
+        const tiles = document.getElementById("tiles");
 
-        // Jump Movement
-        jumpBtn.addEventListener('click', () => {
-            if (isOnGround) {
-                isJumping = true;
-                isOnGround = false;
-                velocityY = jumpStrength;  // Set the jump velocity
-            }
-        });
+        const heroIdleAnimationLeft     = document.getElementById("hero-idle-left");
+        const heroIdleAnimationRight    = document.getElementById("hero-idle-right");
+        const heroRunAnimationLeft      = document.getElementById("hero-run-left");
+        const heroRunAnimationRight     = document.getElementById("hero-run-right");
+        const heroJumpAnimationLeft     = document.getElementById("hero-jump-left");
+        const heroJumpAnimationRight    = document.getElementById("hero-jump-right");
+        const heroAttackAnimationLeft   = document.getElementById("hero-attack-left");
+        const heroAttackAnimationRight  = document.getElementById("hero-attack-right");
+        const heroCrouchAnimationLeft   = document.getElementById("hero-crouch-left");
+        const heroCrouchAnimationRight  = document.getElementById("hero-crouch-right");
+        const heroHurtAnimationLeft     = document.getElementById("hero-hurt-left");
+        const heroHurtAnimationRight    = document.getElementById("hero-hurt-right");
 
-        // Obstacle creation
-        function createObstacle() {
-            const obstacle = document.createElement('div');
-            obstacle.classList.add('obstacle');
-            const randomHeight = Math.floor(Math.random() * 200) + 30;  // Random height
-            obstacle.style.height = randomHeight + 'px';
-            obstacle.style.left = '100%';
-            document.getElementById('game-container').appendChild(obstacle);
+        let heroAnimations = [
+            [heroIdleAnimationLeft,     4],
+            [heroIdleAnimationRight,    4],
+            [heroRunAnimationLeft,      6],
+            [heroRunAnimationRight,     6],
+            [heroJumpAnimationLeft,     4],
+            [heroJumpAnimationRight,    4],
+            [heroAttackAnimationLeft,   5],
+            [heroAttackAnimationRight,  5],
+            [heroCrouchAnimationLeft,   1],
+            [heroCrouchAnimationRight,  1],
+            [heroHurtAnimationLeft,     1],
+            [heroHurtAnimationRight,    1],
+        ];
 
-            // Move obstacle from right to left
-            const obstacleMoveInterval = setInterval(() => {
-                let currentLeft = parseInt(obstacle.style.left);
-                if (currentLeft <= -60) {
-                    clearInterval(obstacleMoveInterval);
-                    obstacle.remove();  // Remove obstacle once out of view
-                }
-                obstacle.style.left = (currentLeft - 2) + 'px';  // Move left
-            }, 10);
-        }
+        let heroAnimationIndex = 1;
+        let heroDirection = 1;
+        let heroJumping = false;
+        let heroPeakJumping = false;
+        let jumpPressedLastFrame = false;
+        let hoverjump = false;
 
-        // Create obstacles every 2 seconds
-        setInterval(createObstacle, 2000);
+        var scrollX = 0;
 
-        // Game loop for gravity and movement
-        function gameLoop() {
-            if (isJumping) {
-                velocityY += gravity;  // Add gravity to velocity
-                cubePosY += velocityY;  // Apply velocity to cube position
-                if (cubePosY >= 0) {  // If the cube hits the ground
-                    cubePosY = 0;
-                    velocityY = 0;
-                    isJumping = false;
-                    isOnGround = true;
-                }
-                cube.style.transform = `translateY(${cubePosY}px)`;
-            }
+        var resetAnimationTime = Date.now();
+        var previousHeroAnimationIndex = 1;
+        let currentLevel = [];
 
-            requestAnimationFrame(gameLoop);  // Keep updating the game
-        }
+        let points = 0;
 
-        // Start the game loop
-        gameLoop();
+        let gameStarted = false;
+        let gameOver = false;
+
+        let demoComplete = false;
+
+        var levels = [
+            [
+                [ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1],
+                [ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1],
+                [ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1]
+            ]
+        ];
+
+        // Add additional game logic here
+
     </script>
 </body>
 </html>
