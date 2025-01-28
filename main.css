@@ -1,16 +1,57 @@
+/* General Body Styling */
 body {
     padding: 0;
     margin: 0;
     background-color: #222;
     color: white;
     text-align: center;
+    overflow: hidden;
 }
 
+/* Fullscreen Video for Camera Feed */
+#cameraFeed {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Cover the entire screen with the camera feed */
+    z-index: -1; /* Place the video in the background */
+}
+
+/* Hide Images (Images are hidden by default in the original code) */
 img {
-    display: none;
+    display: block;
+    position: absolute;
+    z-index: 1; /* All images will be on top of the camera feed */
+}
+
+/* Parallax Image Layers (Using your original setup) */
+#title-screen {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+}
+
+#parallax-mountain-bg, #parallax-mountain-montain-far, #parallax-mountain-mountains, #parallax-mountain-trees, #parallax-mountain-foreground-trees {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    z-index: 1;
 }
 
 .canvas-container {
     width: 816px;
     margin: 100px auto;
+    position: relative;
+    z-index: 2; /* Canvas stays on top of images */
+}
+
+/* Styling for the Canvas */
+#main_screen {
+    width: 100%;
+    height: 100%;
+    background: transparent;
 }
