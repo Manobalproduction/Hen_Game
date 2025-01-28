@@ -15,29 +15,34 @@
             font-family: Arial, sans-serif;
             height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            justify-content: flex-start;
             align-items: center;
             background-color: #87ceeb;
             overflow: hidden;
         }
 
-        #game-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-
         #camera {
-            position: absolute;
             width: 100%;
-            height: 100%;
+            height: 50%;
             object-fit: cover;
             z-index: -1;
         }
 
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 50%;
+            background-color: #f3f3f3;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
         #buttons-container {
             position: absolute;
-            bottom: 10px;
+            bottom: 20px;
             width: 100%;
             display: flex;
             justify-content: space-around;
@@ -60,7 +65,7 @@
         #character-container {
             position: absolute;
             left: 50%;
-            bottom: 50px;
+            bottom: 100px;  /* Adjust the vertical position of the character */
             transform: translateX(-50%);
         }
 
@@ -68,17 +73,35 @@
             width: 100px;
             transition: transform 0.2s ease-in-out;
         }
+
+        .obstacle {
+            position: absolute;
+            bottom: 0;
+            width: 60px;
+            height: 30px;
+            background-color: #333;
+            animation: moveObstacle 3s linear infinite;
+        }
+
+        @keyframes moveObstacle {
+            0% {
+                left: 100%;
+            }
+            100% {
+                left: -60px;
+            }
+        }
     </style>
 </head>
 <body>
+    <video id="camera" autoplay playsinline></video>
     <div id="game-container">
-        <video id="camera" autoplay playsinline></video>
+        <div id="character-container">
+            <img id="chicken" src="chicken.png" alt="Chicken">
+        </div>
         <div id="buttons-container">
             <button id="walk-btn">Walk</button>
             <button id="jump-btn">Jump</button>
-        </div>
-        <div id="character-container">
-            <img id="chicken" src="chicken.png" alt="Chicken">
         </div>
     </div>
 
@@ -97,7 +120,7 @@
         const walkBtn = document.getElementById('walk-btn');
         const jumpBtn = document.getElementById('jump-btn');
         const chicken = document.getElementById('chicken');
-
+        
         walkBtn.addEventListener('click', () => {
             chicken.style.transform = 'translateX(200px)'; // Move the chicken to the right
             setTimeout(() => {
@@ -111,6 +134,14 @@
                 chicken.style.transform = 'translateY(0)'; // Move back down
             }, 300);
         });
+
+        // Create obstacles
+        setInterval(() => {
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle');
+            obstacle.style.left = '100%'; // Position obstacles from right side
+            document.getElementById('game-container').appendChild(obstacle);
+        }, 2000);
     </script>
 </body>
 </html>
