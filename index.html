@@ -2,8 +2,20 @@
 <html>
     <link rel="stylesheet" href="main.css"></link>
     <body>
-        <img src="assets/background.png" id="title-screen">
-        <img src="assets/parallax_mountain_pack/layers/parallax-mountain-bg.png" id="parallax-mountain-bg">
+        <video id="video" autoplay playsinline></video>
+
+<script>
+    navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" }
+    })
+    .then(function(stream) {
+        const videoElement = document.getElementById('video');
+        videoElement.srcObject = stream;
+    })
+    .catch(function(error) {
+        console.log("Error accessing camera: ", error);
+    });
+</script>
         <img src="assets/parallax_mountain_pack/layers/parallax-mountain-montain-far.png" id="parallax-mountain-montain-far">
         <img src="assets/parallax_mountain_pack/layers/parallax-mountain-mountains.png" id="parallax-mountain-mountains">
         <img src="assets/parallax_mountain_pack/layers/parallax-mountain-trees.png" id="parallax-mountain-trees">
