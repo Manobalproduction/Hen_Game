@@ -1,32 +1,41 @@
 <!DOCTYPE html>
-<html>
-    <link rel="stylesheet" href="main.css"></link>
-    <body>
-        <img src="assets/background.png" id="title-screen">
-        <img src="assets/parallax_mountain_pack/layers/parallax-mountain-bg.png" id="parallax-mountain-bg">
-        <img src="assets/parallax_mountain_pack/layers/parallax-mountain-montain-far.png" id="parallax-mountain-montain-far">
-        <img src="assets/parallax_mountain_pack/layers/parallax-mountain-mountains.png" id="parallax-mountain-mountains">
-        <img src="assets/parallax_mountain_pack/layers/parallax-mountain-trees.png" id="parallax-mountain-trees">
-        <img src="assets/parallax_mountain_pack/layers/parallax-mountain-foreground-trees.png" id="parallax-mountain-foreground-trees">
-        <img src="assets/Tileset.png" id="tiles">
-        <img src="assets/hero-idle-left.png" id="hero-idle-left">
-        <img src="assets/hero-idle-right.png" id="hero-idle-right">
-        <img src="assets/hero-run-left.png" id="hero-run-left">
-        <img src="assets/hero-run-right.png" id="hero-run-right">
-        <img src="assets/hero-jump-left.png" id="hero-jump-left">
-        <img src="assets/hero-jump-right.png" id="hero-jump-right">
-        <img src="assets/hero-attack-left.png" id="hero-attack-left">
-        <img src="assets/hero-attack-right.png" id="hero-attack-right">
-        <img src="assets/hero-crouch-left.png" id="hero-crouch-left">
-        <img src="assets/hero-crouch-right.png" id="hero-crouch-right">
-        <img src="assets/hero-hurt-left.png" id="hero-hurt-left">
-        <img src="assets/hero-hurt-right.png" id="hero-hurt-right">
-        <div class="canvas-container">
-            <canvas id="main_screen" width="816" height="480"></canvas>
-        </div>
-        <audio id="theAudio">
-            <source src="assets/moonlight.mp3" type="audio/mp3">
-        </audio>
-    </body>
-    <script src="main.js"></script>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Mobile Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <canvas id="main_screen"></canvas>
+    <div id="title-screen">
+        <h1>Welcome to the Game!</h1>
+        <p>Tap to start</p>
+    </div>
+
+    <!-- Parallax Background Layers -->
+    <div id="parallax-mountain-bg" class="parallax-layer"></div>
+    <div id="parallax-mountain-montain-far" class="parallax-layer"></div>
+    <div id="parallax-mountain-mountains" class="parallax-layer"></div>
+    <div id="parallax-mountain-trees" class="parallax-layer"></div>
+    <div id="parallax-mountain-foreground-trees" class="parallax-layer"></div>
+
+    <!-- Tiles for the game -->
+    <div id="tiles" class="tile"></div>
+
+    <!-- Hero Animations -->
+    <img id="hero-idle-left" src="hero-idle-left.png" alt="Idle Left">
+    <img id="hero-idle-right" src="hero-idle-right.png" alt="Idle Right">
+    <img id="hero-run-left" src="hero-run-left.png" alt="Run Left">
+    <img id="hero-run-right" src="hero-run-right.png" alt="Run Right">
+    <img id="hero-jump-left" src="hero-jump-left.png" alt="Jump Left">
+    <img id="hero-jump-right" src="hero-jump-right.png" alt="Jump Right">
+
+    <!-- Control Buttons -->
+    <div id="left-btn" class="button">←</div>
+    <div id="right-btn" class="button">→</div>
+    <div id="jump-btn" class="button">↑</div>
+
+    <script src="script.js"></script>
+</body>
 </html>
