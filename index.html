@@ -1,32 +1,72 @@
 <!DOCTYPE html>
-<html>
-    <link rel="stylesheet" href="main.css"></link>
-    <body>
-        <img src="assets/background.png" id="title-screen">
-        <img src="assets/parallax_mountain_pack/layers/parallax-mountain-bg.png" id="parallax-mountain-bg">
-        <img src="assets/parallax_mountain_pack/layers/parallax-mountain-montain-far.png" id="parallax-mountain-montain-far">
-        <img src="assets/parallax_mountain_pack/layers/parallax-mountain-mountains.png" id="parallax-mountain-mountains">
-        <img src="assets/parallax_mountain_pack/layers/parallax-mountain-trees.png" id="parallax-mountain-trees">
-        <img src="assets/parallax_mountain_pack/layers/parallax-mountain-foreground-trees.png" id="parallax-mountain-foreground-trees">
-        <img src="assets/Tileset.png" id="tiles">
-        <img src="assets/hero-idle-left.png" id="hero-idle-left">
-        <img src="assets/hero-idle-right.png" id="hero-idle-right">
-        <img src="assets/hero-run-left.png" id="hero-run-left">
-        <img src="assets/hero-run-right.png" id="hero-run-right">
-        <img src="assets/hero-jump-left.png" id="hero-jump-left">
-        <img src="assets/hero-jump-right.png" id="hero-jump-right">
-        <img src="assets/hero-attack-left.png" id="hero-attack-left">
-        <img src="assets/hero-attack-right.png" id="hero-attack-right">
-        <img src="assets/hero-crouch-left.png" id="hero-crouch-left">
-        <img src="assets/hero-crouch-right.png" id="hero-crouch-right">
-        <img src="assets/hero-hurt-left.png" id="hero-hurt-left">
-        <img src="assets/hero-hurt-right.png" id="hero-hurt-right">
-        <div class="canvas-container">
-            <canvas id="main_screen" width="816" height="480"></canvas>
-        </div>
-        <audio id="theAudio">
-            <source src="assets/moonlight.mp3" type="audio/mp3">
-        </audio>
-    </body>
-    <script src="main.js"></script>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transparent Background with Front Camera</title>
+  <style>
+    /* Fullscreen container */
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* This div holds the video from the camera */
+    #video-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      background-color: transparent; /* Transparent background */
+    }
+
+    /* Make the video fill the screen */
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    /* Styling for other content above the camera feed */
+    #content {
+      position: absolute;
+      z-index: 2;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="video-container">
+    <video id="camera" autoplay playsinline></video>
+  </div>
+  <div id="content">
+    <p>Player's face will appear here.</p>
+  </div>
+
+  <script>
+    // Access the front camera
+    async function startCamera() {
+      const videoElement = document.getElementById('camera');
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        videoElement.srcObject = stream;
+      } catch (error) {
+        console.error('Error accessing camera:', error);
+      }
+    }
+
+    startCamera();
+  </script>
+</body>
 </html>
