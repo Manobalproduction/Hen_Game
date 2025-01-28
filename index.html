@@ -3,16 +3,14 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Camera Background Example</title>
+        <title>Camera Background</title>
         <link rel="stylesheet" href="main.css">
     </head>
     <body>
-        <!-- Front Camera Feed -->
+        <!-- Camera Feed Video -->
         <video id="cameraFeed" autoplay playsinline></video>
 
-        <!-- Existing Background and Parallax Images -->
-        <img src="assets/background.png" id="title-screen">
-        <img src="assets/parallax_mountain_pack/layers/parallax-mountain-bg.png" id="parallax-mountain-bg">
+        <!-- Parallax Layers (Other images remain intact) -->
         <img src="assets/parallax_mountain_pack/layers/parallax-mountain-montain-far.png" id="parallax-mountain-montain-far">
         <img src="assets/parallax_mountain_pack/layers/parallax-mountain-mountains.png" id="parallax-mountain-mountains">
         <img src="assets/parallax_mountain_pack/layers/parallax-mountain-trees.png" id="parallax-mountain-trees">
@@ -30,33 +28,15 @@
         <img src="assets/hero-crouch-right.png" id="hero-crouch-right">
         <img src="assets/hero-hurt-left.png" id="hero-hurt-left">
         <img src="assets/hero-hurt-right.png" id="hero-hurt-right">
-
-        <!-- Canvas for other content -->
+        
         <div class="canvas-container">
             <canvas id="main_screen" width="816" height="480"></canvas>
         </div>
 
-        <!-- Background music -->
         <audio id="theAudio">
             <source src="assets/moonlight.mp3" type="audio/mp3">
         </audio>
 
         <script src="main.js"></script>
-        <script>
-            // Function to access the front camera
-            async function startCamera() {
-                const videoElement = document.getElementById('cameraFeed');
-                try {
-                    // Request user media for the front camera
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-                    videoElement.srcObject = stream;
-                } catch (error) {
-                    console.error('Error accessing the camera:', error);
-                }
-            }
-
-            // Start the camera on page load
-            window.onload = startCamera;
-        </script>
     </body>
 </html>
