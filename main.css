@@ -4,10 +4,21 @@ body {
     background-color: #222;
     color: white;
     text-align: center;
+    position: relative; /* To ensure the positioning of absolute elements inside */
+}
+
+#video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* To cover the entire screen without distortion */
+    z-index: -1; /* Ensures it stays behind all other content */
 }
 
 img {
-    display: none;
+    display: none; /* Keep images hidden initially or control visibility via JavaScript */
 }
 
 .canvas-container {
