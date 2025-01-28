@@ -76,7 +76,6 @@
         window.onkeydown = function(e) { pressedKeys[e.keyCode] = true;  }
 
         const titleScreen = document.getElementById("title-screen");
-
         const layers = [
             document.getElementById("parallax-mountain-bg"),
             document.getElementById("parallax-mountain-montain-far"),
@@ -87,64 +86,47 @@
 
         const tiles = document.getElementById("tiles");
 
-        const heroIdleAnimationLeft     = document.getElementById("hero-idle-left");
-        const heroIdleAnimationRight    = document.getElementById("hero-idle-right");
-        const heroRunAnimationLeft      = document.getElementById("hero-run-left");
-        const heroRunAnimationRight     = document.getElementById("hero-run-right");
-        const heroJumpAnimationLeft     = document.getElementById("hero-jump-left");
-        const heroJumpAnimationRight    = document.getElementById("hero-jump-right");
-        const heroAttackAnimationLeft   = document.getElementById("hero-attack-left");
-        const heroAttackAnimationRight  = document.getElementById("hero-attack-right");
-        const heroCrouchAnimationLeft   = document.getElementById("hero-crouch-left");
-        const heroCrouchAnimationRight  = document.getElementById("hero-crouch-right");
-        const heroHurtAnimationLeft     = document.getElementById("hero-hurt-left");
-        const heroHurtAnimationRight    = document.getElementById("hero-hurt-right");
+        const heroIdleAnimationLeft = document.getElementById("hero-idle-left");
+        const heroIdleAnimationRight = document.getElementById("hero-idle-right");
 
-        let heroAnimations = [
-            [heroIdleAnimationLeft,     4],
-            [heroIdleAnimationRight,    4],
-            [heroRunAnimationLeft,      6],
-            [heroRunAnimationRight,     6],
-            [heroJumpAnimationLeft,     4],
-            [heroJumpAnimationRight,    4],
-            [heroAttackAnimationLeft,   5],
-            [heroAttackAnimationRight,  5],
-            [heroCrouchAnimationLeft,   1],
-            [heroCrouchAnimationRight,  1],
-            [heroHurtAnimationLeft,     1],
-            [heroHurtAnimationRight,    1],
-        ];
-
-        let heroAnimationIndex = 1;
-        let heroDirection = 1;
-        let heroJumping = false;
-        let heroPeakJumping = false;
-        let jumpPressedLastFrame = false;
-        let hoverjump = false;
-
-        var scrollX = 0;
-
-        var resetAnimationTime = Date.now();
-        var previousHeroAnimationIndex = 1;
-        let currentLevel = [];
-
-        let points = 0;
-
+        // Initial state
         let gameStarted = false;
-        let gameOver = false;
 
-        let demoComplete = false;
+        // Start the game when the user clicks anywhere or presses a key
+        window.addEventListener('click', startGame);
+        window.addEventListener('keydown', startGame);
 
-        var levels = [
-            [
-                [ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1],
-                [ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1],
-                [ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1]
-            ]
-        ];
+        function startGame() {
+            if (!gameStarted) {
+                gameStarted = true;
+                titleScreen.style.display = 'none';  // Hide the title screen
+                setupGame();
+            }
+        }
 
-        // Add additional game logic here
+        function setupGame() {
+            // Set up initial game state (you can expand this as needed)
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
 
+            // Start the game loop
+            gameLoop();
+        }
+
+        function gameLoop() {
+            if (gameStarted) {
+                // Example game logic - clear screen and redraw background
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.fillStyle = '#87CEEB';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Example: Draw Hero Animation (This is just an example; you can adjust as needed)
+                context.drawImage(heroIdleAnimationLeft, 100, 100, 100, 100);
+
+                // Call gameLoop again (this creates an animation loop)
+                requestAnimationFrame(gameLoop);
+            }
+        }
     </script>
 </body>
 </html>
