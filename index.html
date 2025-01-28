@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chicken Game</title>
+    <title>Cube Game with Camera Background</title>
     <style>
         * {
             margin: 0;
@@ -38,7 +38,7 @@
             height: 50%;
             background-color: #f3f3f3;
             display: flex;
-            justify-content: flex-end;
+            justify-content: flex-start;
             align-items: flex-start;
             overflow: hidden;
         }
@@ -68,13 +68,13 @@
         #character-container {
             position: absolute;
             left: 50%;
-            bottom: 80px;  /* Adjust the vertical position of the character */
+            bottom: 80px;  /* Adjust vertical position */
             transform: translateX(-50%);
         }
 
         #cube {
-            width: 60px;  /* Smaller size for character */
-            height: 60px;
+            width: 50px;  /* Smaller size for character */
+            height: 50px;
             background-color: red;
             position: absolute;
             bottom: 0;
@@ -86,7 +86,6 @@
             width: 60px;
             height: 30px;
             background-color: #333;
-            animation: moveObstacle 3s linear infinite;
         }
 
         @keyframes moveObstacle {
@@ -129,50 +128,78 @@
 
         let isJumping = false;
         let isWalking = false;
+        let cubePosX = 0;
+        let cubePosY = 0;
+        let velocityY = 0;
+        let isOnGround = true;
+        const gravity = 0.5;  // Controls how fast the cube falls
+        const jumpStrength = -10;  // Strength of the jump
+        const walkSpeed = 5; // Speed at which the character walks
 
         // Walk Movement
         walkBtn.addEventListener('click', () => {
             if (!isWalking) {
                 isWalking = true;
-                cube.style.transition = 'transform 0.5s linear';
-                cube.style.transform = 'translateX(200px)';  // Move right
+                cubePosX += walkSpeed;
+                cube.style.transition = 'transform 0.2s linear';
+                cube.style.transform = `translateX(${cubePosX}px)`;
                 setTimeout(() => {
-                    cube.style.transform = 'translateX(0)'; // Reset to original position
                     isWalking = false;
-                }, 500);
+                }, 200);
             }
         });
 
         // Jump Movement
         jumpBtn.addEventListener('click', () => {
-            if (!isJumping) {
+            if (isOnGround) {
                 isJumping = true;
-                cube.style.transition = 'transform 0.3s ease-in-out';
-                cube.style.transform = 'translateY(-100px)'; // Jump up
-                setTimeout(() => {
-                    cube.style.transform = 'translateY(0)'; // Fall back down
-                    isJumping = false;
-                }, 300);
+                isOnGround = false;
+                velocityY = jumpStrength;  // Set the jump velocity
             }
         });
 
-        // Randomized Obstacles
+        // Obstacle creation
         function createObstacle() {
             const obstacle = document.createElement('div');
             obstacle.classList.add('obstacle');
-            const randomHeight = Math.floor(Math.random() * 200) + 30;  // Random height between 30px and 200px
+            const randomHeight = Math.floor(Math.random() * 200) + 30;  // Random height
             obstacle.style.height = randomHeight + 'px';
             obstacle.style.left = '100%';
             document.getElementById('game-container').appendChild(obstacle);
 
-            // Move obstacle
-            setInterval(() => {
-                obstacle.style.left = parseInt(obstacle.style.left) - 2 + 'px';
+            // Move obstacle from right to left
+            const obstacleMoveInterval = setInterval(() => {
+                let currentLeft = parseInt(obstacle.style.left);
+                if (currentLeft <= -60) {
+                    clearInterval(obstacleMoveInterval);
+                    obstacle.remove();  // Remove obstacle once out of view
+                }
+                obstacle.style.left = (currentLeft - 2) + 'px';  // Move left
             }, 10);
         }
 
-        setInterval(createObstacle, 2000);  // Create new obstacles every 2 seconds
+        // Create obstacles every 2 seconds
+        setInterval(createObstacle, 2000);
 
+        // Game loop for gravity and movement
+        function gameLoop() {
+            if (isJumping) {
+                velocityY += gravity;  // Add gravity to velocity
+                cubePosY += velocityY;  // Apply velocity to cube position
+                if (cubePosY >= 0) {  // If the cube hits the ground
+                    cubePosY = 0;
+                    velocityY = 0;
+                    isJumping = false;
+                    isOnGround = true;
+                }
+                cube.style.transform = `translateY(${cubePosY}px)`;
+            }
+
+            requestAnimationFrame(gameLoop);  // Keep updating the game
+        }
+
+        // Start the game loop
+        gameLoop();
     </script>
 </body>
 </html>
